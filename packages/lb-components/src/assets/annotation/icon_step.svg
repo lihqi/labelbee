@@ -1,8 +1,1 @@
-<svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M64 12H20V20H64V12Z" fill="#666FFF" fill-opacity="0.25"/>
-<path d="M64 52H20V60H64V52Z" fill="#666FFF" fill-opacity="0.25"/>
-<path d="M64 32H20V40H64V32Z" fill="#666FFF" fill-opacity="0.25"/>
-<rect x="7" y="9" width="14" height="14" rx="7" fill="#666FFF" stroke="white" stroke-width="2"/>
-<rect x="7" y="29" width="14" height="14" rx="7" fill="#666FFF" fill-opacity="0.5" stroke="white" stroke-width="2"/>
-<rect x="7" y="49" width="14" height="14" rx="7" fill="#666FFF" fill-opacity="0.25" stroke="white" stroke-width="2"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" fill="none" viewBox="0 0 72 72"><path fill="#666FFF" fill-opacity=".25" d="M64 12H20V20H64V12Z"/><path fill="#666FFF" fill-opacity=".25" d="M64 52H20V60H64V52Z"/><path fill="#666FFF" fill-opacity=".25" d="M64 32H20V40H64V32Z"/><rect width="14" height="14" x="7" y="9" fill="#666FFF" stroke="#fff" stroke-width="2" rx="7"/><rect width="14" height="14" x="7" y="29" fill="#666FFF" fill-opacity=".5" stroke="#fff" stroke-width="2" rx="7"/><rect width="14" height="14" x="7" y="49" fill="#666FFF" fill-opacity=".25" stroke="#fff" stroke-width="2" rx="7"/></svg>
