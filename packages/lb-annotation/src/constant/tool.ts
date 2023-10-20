@@ -63,6 +63,8 @@ export enum EToolName {
   OCRRelation = 'OCRRelationTool',
   /** 算法分割辅助工具 */
   SegmentByRect = 'segmentByRectTool',
+  /** SAM算法分割辅助工具 */
+  SegmentBySAM = 'segmentBySAMTool',
   /** 立体框工具  */
   Cuboid = 'cuboidTool',
   /** 点云多边形工具 */

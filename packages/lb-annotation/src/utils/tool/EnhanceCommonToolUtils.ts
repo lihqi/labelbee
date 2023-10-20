@@ -17,6 +17,7 @@ import PointOperation from '../../core/toolOperation/pointOperation';
 import TextToolOperation from '../../core/toolOperation/TextToolOperation';
 import SegmentByRect from '../../core/toolOperation/segmentByRect';
 import CommonToolUtils from './CommonToolUtils';
+import SegmentBySAM from '@/core/toolOperation/segmentBySAM';
 
 const getCurrentOperation = (toolName: EToolName | ECheckModel) => {
   switch (toolName) {
@@ -25,6 +26,8 @@ const getCurrentOperation = (toolName: EToolName | ECheckModel) => {
       return RectOperationAsNewName;
     case EToolName.SegmentByRect:
       return SegmentByRect;
+    case EToolName.SegmentBySAM:
+      return SegmentBySAM;
     case EToolName.Tag:
       return TagOperation;
     case EToolName.Polygon:

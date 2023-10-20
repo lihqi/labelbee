@@ -41,12 +41,6 @@ class SegmentByRect extends RectOperation {
 
   public onKeydown(e: KeyboardEvent) {
     switch (e.keyCode) {
-      case EKeyCode.Esc:
-        e.preventDefault();
-        e.stopPropagation();
-        this.clearPredictionInfo();
-        break;
-
       case EKeyCode.Z:
         if (e.ctrlKey) {
           e.preventDefault();
