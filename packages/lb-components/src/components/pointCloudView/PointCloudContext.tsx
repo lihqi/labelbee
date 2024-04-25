@@ -22,6 +22,7 @@ import { useDispatch } from '@/store/ctx';
 import { ChangeSave } from '@/store/annotation/actionCreators';
 import useAnnotatedBoxStore from '@/store/annotatedBox';
 import _ from 'lodash';
+import { IPointCloud2DRectOperationViewRect } from '../pointCloud2DRectOperationView';
 
 interface IPointCloudContextInstances {
   topViewInstance?: PointCloudAnnotation;
@@ -80,9 +81,9 @@ export interface IPointCloudContext
   polygonList: IPolygonData[];
   setPolygonList: (polygonList: IPolygonData[]) => void;
   setRectList: (rectList: IPointCloudBoxRect[]) => void;
-  addRectIn2DView: (rect: IPointCloudBoxRect) => void;
+  addRectIn2DView: (rect: IPointCloud2DRectOperationViewRect) => void;
   removeRectIn2DView: (id: string) => void;
-  updateRectIn2DView: (rect: IPointCloudBoxRect) => void;
+  updateRectIn2DView: (rect: IPointCloud2DRectOperationViewRect) => void;
   lineList: ILine[];
   setLineList: (lineList: ILine[]) => void;
 
@@ -129,7 +130,7 @@ export interface IPointCloudContext
   cacheImageNodeSize: (params: { imgNode: HTMLImageElement; path: string }) => void;
 }
 
-const pickRectObject = (rect: IPointCloudBoxRect) => {
+const pickRectObject = (rect: IPointCloud2DRectOperationViewRect) => {
   return _.pick(rect, ['id', 'attribute', 'width', 'height', 'x', 'y', 'imageName']);
 };
 
@@ -306,14 +307,14 @@ export const PointCloudProvider: React.FC<{}> = ({ children }) => {
       }
     };
 
-    const addRectIn2DView = (rect: IPointCloudBoxRect) => {
+    const addRectIn2DView = (rect: IPointCloud2DRectOperationViewRect) => {
       const newRect = pickRectObject(rect);
       setRectList((prev: IPointCloudBoxRect[]) => {
         return [...prev, newRect];
       });
     };
 
-    const updateRectIn2DView = (rect: IPointCloudBoxRect) => {
+    const updateRectIn2DView = (rect: IPointCloud2DRectOperationViewRect) => {
       const newRect = pickRectObject(rect);
       setRectList((prev: IPointCloudBoxRect[]) => {
         return prev.map((i) => {

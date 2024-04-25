@@ -25,12 +25,12 @@ interface IPointCloud2DRectOperationViewProps {
   afterImgOnLoad: TAfterImgOnLoad;
 }
 
-interface IPointCloud2DRectOperationViewRect extends IBasicRect {
+export interface IPointCloud2DRectOperationViewRect extends IBasicRect {
   boxID: string;
   id: string;
   attribute: any;
   order?: number;
-  imageName?: string;
+  imageName: string;
 }
 
 const PointCloud2DRectOperationView = (props: IPointCloud2DRectOperationViewProps) => {
@@ -71,7 +71,7 @@ const PointCloud2DRectOperationView = (props: IPointCloud2DRectOperationViewProp
   };
 
   const handleAddRect = (rect: IPointCloud2DRectOperationViewRect) => {
-    addRectIn2DView({ ...rect, imageName: mappingDataPath.current });
+    addRectIn2DView({ ...rect, imageName: mappingDataPath.current as string });
   };
 
   const handleRemoveRect = (rect: IPointCloud2DRectOperationViewRect) => {
