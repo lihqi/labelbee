@@ -146,7 +146,7 @@ export default class AnnotationDataUtils {
             return
           }
 
-          resultIdMapping.set(oldValue, newValue)
+          // resultIdMapping.set(oldValue, newValue)
         }
 
         // 数据处理
