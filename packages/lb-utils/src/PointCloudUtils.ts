@@ -504,6 +504,19 @@ class PointCloudUtils {
     return arr;
   }
 
+  /**
+   * Get the next available trackID for the point cloud data.
+   * filter out more than 4 digits marking ID self-increment logic, for example:
+   * the label ID has: 1, 2, 3, 1001, then mark again when marking the label ID should be 4 (currently 1002)
+   * special scenarios, assuming that the annotation ID 1-1001 are all used up, and can be marked again when the self-increment for 1002
+   *
+   * @param {Object} params - An object containing the parameters for the function.
+   * @param {Array<{ result: string }>} params.imgList - An array of objects containing the point cloud data.
+   * @param {number} [params.step=1] - The step size for processing the data.
+   * @param {IPointCloudBox[]} params.extraBoxList - An array of additional boxes for the point cloud data.
+   * @param {IPointCloudSphere[]} [params.extraSphereList] - An array of additional spheres for the point cloud data.
+   * @returns {number} - The next available trackID.
+   */
   public static getNextTrackID({
     imgList,
     step = 1,
@@ -515,16 +528,31 @@ class PointCloudUtils {
     extraBoxList: IPointCloudBox[];
     extraSphereList?: IPointCloudSphere[];
   }) {
-    let trackID = 1;
     const boxList = this.getAllPointCloudResult({ imgList, step, extraBoxList, extraSphereList });
 
-    boxList.forEach((data: IPointCloudBox | IPointCloudSphere) => {
-      if (typeof data?.trackID === 'number' && data.trackID >= trackID) {
-        trackID = data.trackID + 1;
-      }
-    });
+    const existingTrackIDs = boxList
+      .map((data) => data.trackID)
+      .filter((trackID): trackID is number => typeof trackID === 'number')
+      .sort((a, b) => a - b);
 
-    return trackID;
+    if (existingTrackIDs.length === 0) {
+      return 1;
+    }
+
+    let index = existingTrackIDs.length - 1;
+    while (index >= 0) {
+      const currentID = existingTrackIDs[index];
+
+      if (currentID && currentID < 1000 && !existingTrackIDs.includes(currentID + 1)) {
+        return currentID + 1;
+      }
+
+      index--;
+    }
+
+    return existingTrackIDs[existingTrackIDs.length - 1]
+      ? existingTrackIDs[existingTrackIDs.length - 1] + 1
+      : 1;
   }
 
   public static batchUpdateTrackID({
