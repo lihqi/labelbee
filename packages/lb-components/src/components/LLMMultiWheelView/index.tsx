@@ -133,7 +133,6 @@ const LLMMultiWheelView: React.FC<IProps> = (props) => {
     }
     const currentData = imgList[imgIndex] ?? {};
     const dialogList = currentData?.questionList?.textList ?? [];
-
     setDialogList(dialogList);
     if (dialogList?.length) {
       setSelectedID(dialogList[0].id);
@@ -141,13 +140,15 @@ const LLMMultiWheelView: React.FC<IProps> = (props) => {
   }, [imgIndex]);
 
   useEffect(() => {
+    if (!imgList[imgIndex]) {
+      return;
+    }
     const currentData = imgList[imgIndex] ?? {};
     const qaData = currentData?.questionList;
 
     const llmFile = currentData?.llmFile?.textList;
 
     const textList = qaData?.textList;
-
     const newDialogList = textList?.map((item: any, questionIndex: number) => {
       return {
         ...item,
@@ -181,7 +182,15 @@ const LLMMultiWheelView: React.FC<IProps> = (props) => {
       };
     });
     setDialogList(newDialogList);
-  }, [newAnswerListMap, questionIsImg, questionIsAudio, answerIsImg]);
+  }, [
+    newAnswerListMap,
+    questionIsImg,
+    questionIsAudio,
+    answerIsImg,
+    answerIsAudio,
+    imgList,
+    imgIndex,
+  ]);
 
   useEffect(() => {
     if (stepList && step) {
