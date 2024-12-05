@@ -34,4 +34,5 @@ export enum ELLMDataType {
   Picture = 'picture',
   Text = 'text',
   None = 'none',
+  Audio = 'audio'
 }

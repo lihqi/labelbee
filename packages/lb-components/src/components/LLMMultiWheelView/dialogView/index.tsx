@@ -1,4 +1,5 @@
 import { getTextControlByConfig, RenderAnswer } from '@/components/LLMToolView/questionView';
+import AudioView from '@/components/LLMToolView/questionView/components/audioView';
 import { RenderQuestion } from '@/components/LLMToolView/questionView/components/header';
 import ImgView from '@/components/LLMToolView/questionView/components/imgView';
 import { ILLMMultiWheelToolConfig } from '@/components/LLMToolView/types';
@@ -18,6 +19,8 @@ interface IDialogViewProps {
   answerIsImg: boolean;
   questionIsImg: boolean;
   LLMConfig?: ILLMMultiWheelToolConfig;
+  answerIsAudio?: boolean;
+  questionIsAudio?: boolean;
 }
 
 const DialogView = (props: IDialogViewProps) => {
@@ -29,6 +32,8 @@ const DialogView = (props: IDialogViewProps) => {
     name = '',
     answerIsImg,
     questionIsImg,
+    questionIsAudio,
+    answerIsAudio,
     LLMConfig,
   } = props;
   const { t } = useTranslation();
@@ -36,6 +41,39 @@ const DialogView = (props: IDialogViewProps) => {
 
   const order = index + 1;
   const showName = name || `${t('Dialog')}${order}`;
+
+  const dialogAnswer = () => {
+    if (answerIsImg) {
+      return (
+        <>
+          <Button type='primary'>{t('Answer')}</Button>
+          <ImgView answerList={answerList} />
+        </>
+      );
+    }
+    if (answerIsAudio) {
+      return (
+        <>
+          <Button type='primary'>{t('Answer')}</Button>
+          <AudioView answerList={answerList} />
+        </>
+      );
+    }
+    return answerList?.map((item: any, index: number) => {
+      const order = index + 1;
+      const answer = { ...item, order };
+      const isTextControl = getTextControlByConfig(answer, LLMConfig);
+      return (
+        <div key={index}>
+          <Button type='primary'>
+            {t('Answer')}
+            {order}
+          </Button>
+          <RenderAnswer i={answer} isTextControl={isTextControl} dataFormatType={dataFormatType} />
+        </div>
+      );
+    });
+  };
 
   return (
     <div
@@ -63,36 +101,11 @@ const DialogView = (props: IDialogViewProps) => {
             question={question}
             dataFormatType={dataFormatType}
             isImg={questionIsImg}
+            isAudio={questionIsAudio}
           />
         </div>
       </div>
-      <div className={`dialog-answer`}>
-        {answerIsImg ? (
-          <>
-            <Button type='primary'>{t('Answer')}</Button>
-            <ImgView answerList={answerList} />
-          </>
-        ) : (
-          answerList?.map((item: any, index: number) => {
-            const order = index + 1;
-            const answer = { ...item, order };
-            const isTextControl = getTextControlByConfig(answer, LLMConfig);
-            return (
-              <div key={index}>
-                <Button type='primary'>
-                  {t('Answer')}
-                  {order}
-                </Button>
-                <RenderAnswer
-                  i={answer}
-                  isTextControl={isTextControl}
-                  dataFormatType={dataFormatType}
-                />
-              </div>
-            );
-          })
-        )}
-      </div>
+      <div className={`dialog-answer`}>{dialogAnswer()}</div>
     </div>
   );
 };

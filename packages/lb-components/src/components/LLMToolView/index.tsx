@@ -71,15 +71,17 @@ const LLMToolView: React.FC<IProps> = (props) => {
       return;
     }
     const questionIsImg = LLMConfig?.dataType?.prompt === ELLMDataType.Picture;
+    const questionIsAudio = LLMConfig?.dataType?.prompt === ELLMDataType.Audio;
     const answerIsImg = LLMConfig?.dataType?.response === ELLMDataType.Picture;
+    const answerIsAudio = LLMConfig?.dataType?.response === ELLMDataType.Audio;
 
     const qaData = imgList[imgIndex]?.questionList;
 
     const llmFile = imgList[imgIndex]?.llmFile;
-    const titleQuestion = questionIsImg ? llmFile?.question : qaData?.question;
+    const titleQuestion = questionIsImg || questionIsAudio ? llmFile?.question : qaData?.question;
     setQuestion(titleQuestion);
     let list = qaData?.answerList || [];
-    if (answerIsImg) {
+    if (answerIsImg || answerIsAudio) {
       list = llmFile?.answerList || [];
     }
     if (LLMConfig?.dataType?.response === ELLMDataType.None) {

@@ -30,10 +30,20 @@ interface ILLMMultiWheelSourceViewProps {
   LLMConfig?: ILLMMultiWheelToolConfig;
   dialogList: any[];
   lang?: string;
+  questionIsAudio?: boolean;
+  answerIsAudio?: boolean;
 }
 
 export const LLMMultiWheelSourceView: React.FC<ILLMMultiWheelSourceViewProps> = (props) => {
-  const { questionIsImg, answerIsImg, LLMConfig, dialogList, lang = 'cn' } = props;
+  const {
+    questionIsImg,
+    answerIsImg,
+    questionIsAudio,
+    answerIsAudio,
+    LLMConfig,
+    dialogList,
+    lang = 'cn',
+  } = props;
   const { dataFormatType, setDataFormatType } = useLLMMultiWheelStore();
 
   useEffect(() => {
@@ -66,6 +76,8 @@ export const LLMMultiWheelSourceView: React.FC<ILLMMultiWheelSourceViewProps> = 
               index={index}
               questionIsImg={questionIsImg}
               answerIsImg={answerIsImg}
+              questionIsAudio={questionIsAudio}
+              answerIsAudio={answerIsAudio}
               LLMConfig={LLMConfig}
             />
           ))}
@@ -109,6 +121,9 @@ const LLMMultiWheelView: React.FC<IProps> = (props) => {
   const [dialogList, setDialogList] = useState<any[]>([]);
   const questionIsImg = LLMConfig?.dataType?.prompt === ELLMDataType.Picture;
   const answerIsImg = LLMConfig?.dataType?.response === ELLMDataType.Picture;
+  const questionIsAudio = LLMConfig?.dataType?.prompt === ELLMDataType.Audio;
+  const answerIsAudio = LLMConfig?.dataType?.response === ELLMDataType.Audio;
+
   const { t } = useTranslation();
   const [, forceRender] = useState(0);
 
@@ -136,23 +151,25 @@ const LLMMultiWheelView: React.FC<IProps> = (props) => {
     const newDialogList = textList?.map((item: any, questionIndex: number) => {
       return {
         ...item,
-        question: questionIsImg
-          ? getInfoFromLLMFile({
-              type: 'question',
-              questionIndex,
-              llmFile,
-            }) || item?.question
-          : item?.question,
+        question:
+          questionIsImg || questionIsAudio
+            ? getInfoFromLLMFile({
+                type: 'question',
+                questionIndex,
+                llmFile,
+              }) || item?.question
+            : item?.question,
         answerList: item?.answerList?.map((i: any, answerIndex: number) => {
           const mapId = `${item?.id ?? ''}-${i?.id ?? ''}`;
-          const info = answerIsImg
-            ? getInfoFromLLMFile({
-                type: 'answer',
-                questionIndex,
-                answerIndex,
-                llmFile,
-              }) || {}
-            : {};
+          const info =
+            answerIsImg || answerIsAudio
+              ? getInfoFromLLMFile({
+                  type: 'answer',
+                  questionIndex,
+                  answerIndex,
+                  llmFile,
+                }) || {}
+              : {};
           return {
             ...i,
             answer: i.answer,
@@ -164,7 +181,7 @@ const LLMMultiWheelView: React.FC<IProps> = (props) => {
       };
     });
     setDialogList(newDialogList);
-  }, [newAnswerListMap, questionIsImg, answerIsImg]);
+  }, [newAnswerListMap, questionIsImg, questionIsAudio, answerIsImg]);
 
   useEffect(() => {
     if (stepList && step) {
@@ -192,6 +209,8 @@ const LLMMultiWheelView: React.FC<IProps> = (props) => {
       <LLMMultiWheelSourceView
         questionIsImg={questionIsImg}
         answerIsImg={answerIsImg}
+        questionIsAudio={questionIsAudio}
+        answerIsAudio={answerIsAudio}
         LLMConfig={LLMConfig}
         dialogList={dialogList}
       />

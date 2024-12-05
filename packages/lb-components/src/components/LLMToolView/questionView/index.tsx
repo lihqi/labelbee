@@ -22,6 +22,7 @@ import DiffMatchPatchComponent from '@/components/diffMatchPatchComponent';
 import Header from './components/header';
 import ImgView from './components/imgView';
 import { isString } from 'lodash';
+import AudioView from './components/audioView';
 
 interface IProps {
   hoverKey?: number;
@@ -95,6 +96,8 @@ const QuestionView: React.FC<IProps> = (props) => {
   const [dataFormatType, setDataFormatType] = useState(EDataFormatType.Default);
   const questionIsImg = LLMConfig?.dataType?.prompt === ELLMDataType.Picture;
   const answerIsImg = LLMConfig?.dataType?.response === ELLMDataType.Picture;
+  const questionIsAudio = LLMConfig?.dataType?.prompt === ELLMDataType.Audio;
+  const answerIsAudio = LLMConfig?.dataType?.response === ELLMDataType.Audio;
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -132,6 +135,17 @@ const QuestionView: React.FC<IProps> = (props) => {
       )}
     </div>
   );
+
+  const answerContent = () => {
+    if (answerIsAudio) {
+      return <AudioView hoverKey={hoverKey} answerList={answerList} />;
+    }
+    if (answerIsImg) {
+      return <ImgView hoverKey={hoverKey} answerList={answerList} />;
+    }
+    return textAnswer;
+  };
+
   return (
     <div className={LLMViewCls}>
       <Header
@@ -139,12 +153,13 @@ const QuestionView: React.FC<IProps> = (props) => {
         dataFormatType={dataFormatType}
         setDataFormatType={setDataFormatType}
         isImg={questionIsImg}
+        isAudio={questionIsAudio}
       />
       <div className={`${LLMViewCls}__textBox`}>
         <div className={`${LLMViewCls}__title`}>
           {t('Answer')} {answerHeaderSlot}
         </div>
-        {answerIsImg ? <ImgView hoverKey={hoverKey} answerList={answerList} /> : textAnswer}
+        {answerContent()}
       </div>
     </div>
   );

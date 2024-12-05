@@ -6,7 +6,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Resizable } from 're-resizable';
-import { Radio, Image } from 'antd';
+import { Radio, Image, Empty } from 'antd';
 import { EDataFormatType, prefix } from '@/constant';
 import { FileTextOutlined } from '@ant-design/icons';
 import MarkdownView from '@/components/markdownView';
@@ -28,6 +28,7 @@ interface IProps {
   dataFormatType: EDataFormatType;
   setDataFormatType: (v: EDataFormatType) => void;
   isImg?: boolean;
+  isAudio?: boolean;
 }
 
 const LLMViewCls = `${prefix}-LLMView`;
@@ -36,6 +37,7 @@ export const RenderQuestion = ({
   question,
   dataFormatType,
   isImg,
+  isAudio,
 }: {
   question:
     | string
@@ -48,6 +50,7 @@ export const RenderQuestion = ({
       };
   dataFormatType: EDataFormatType;
   isImg?: boolean;
+  isAudio?: boolean;
 }) => {
   const textValue = isString(question) ? question : '';
   const ImgFail = i18n.language === 'en' ? ImgFailEn : ImgFailCn;
@@ -56,6 +59,19 @@ export const RenderQuestion = ({
     const url = isObject(question) ? question?.url : '';
     return <Image src={url || ImgFail} fallback={ImgFail} />;
   }
+
+  if (isAudio) {
+    const url = isObject(question) ? question?.url : '';
+    if (url) {
+      return (
+        <audio controls>
+          <source src={url} type='audio/mpeg' />
+        </audio>
+      );
+    }
+    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />;
+  }
+
   return (
     <div style={{ whiteSpace: 'pre-wrap' }}>
       {dataFormatType === EDataFormatType.Markdown ? <MarkdownView value={textValue} /> : textValue}
@@ -63,7 +79,7 @@ export const RenderQuestion = ({
   );
 };
 const Header = (props: IProps) => {
-  const { question, dataFormatType, setDataFormatType, isImg } = props;
+  const { question, dataFormatType, setDataFormatType, isImg, isAudio } = props;
   const DEFAULT_HEIGHT = 300;
   const { t } = useTranslation();
 
@@ -91,7 +107,12 @@ const Header = (props: IProps) => {
         />
       </div>
       <div className={`${LLMViewCls}__headerContent`}>
-        <RenderQuestion question={question} dataFormatType={dataFormatType} isImg={isImg} />
+        <RenderQuestion
+          question={question}
+          dataFormatType={dataFormatType}
+          isImg={isImg}
+          isAudio={isAudio}
+        />
       </div>
     </Resizable>
   );
