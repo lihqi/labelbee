@@ -23,7 +23,7 @@ import {
   ILine,
 } from '@labelbee/lb-utils';
 import { EPointCloudBoxRenderTrigger } from '@/utils/ToolPointCloudBoxRenderHelper';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { PointCloudContext } from './PointCloudContext';
 import { useRotate } from './hooks/useRotate';
 import { useRotateEdge } from './hooks/useRotateEdge';
@@ -88,7 +88,7 @@ const TopViewToolbar = ({ currentData }: IAnnotationStateProps) => {
   const { switchToNextSphere } = useSphere();
   const { updateRotate } = useRotate({ currentData });
   const { updateRotateEdge } = useRotateEdge({ currentData });
-  const ptCtx = React.useContext(PointCloudContext);
+  const ptCtx = useContext(PointCloudContext);
   const { topViewInstance } = ptCtx;
 
   const currentToolName = ptCtx?.topViewInstance?.toolScheduler?.getCurrentToolName();
@@ -204,11 +204,11 @@ const PointCloudTopView: React.FC<IProps> = ({
 }) => {
   const [annotationPos, setAnnotationPos] = useState({ zoom: 1, currentPos: { x: 0, y: 0 } });
   const ref = useRef<HTMLDivElement>(null);
-  const ptCtx = React.useContext(PointCloudContext);
+  const ptCtx = useContext(PointCloudContext);
   const size = useSize(ref);
   const config = jsonParser(stepInfo.config);
   const { setZoom, syncTopviewToolZoom } = useZoom();
-  const { hideAttributes, setIsLargeStatus, clearAllDetectionInstance } = ptCtx;
+  const { hideAttributes, setIsLargeStatus, selectedID, pointCloudBoxList } = ptCtx;
 
   const { addPolygon, deletePolygon } = usePolygon();
   const { deletePointCloudSphere } = useSphere();
@@ -218,6 +218,7 @@ const PointCloudTopView: React.FC<IProps> = ({
   const pointCloudViews = usePointCloudViews();
   const { pushHistoryWithList } = useHistory();
   const [needUpdateCenter, setNeedUpdateCenter] = useState(true);
+  const [isCreate, setIsCreate] = useState<boolean>(false);
 
   useLayoutEffect(() => {
     if (ptCtx.topViewInstance) {
@@ -242,6 +243,15 @@ const PointCloudTopView: React.FC<IProps> = ({
       ptCtx.setTopViewInstance(pointCloudAnnotation);
     }
   }, [currentData]);
+
+  useEffect(() => {
+    if (isCreate && selectedID) {
+      // 表示被创建的时候，单独更新当前创建完毕的框体即可
+      ptCtx.syncAllViewPointCloudColor(EPointCloudBoxRenderTrigger.Single, pointCloudBoxList);
+      // 颜色更新完毕后将标志位改成false
+      setIsCreate(false);
+    }
+  }, [isCreate]);
 
   useEffect(() => {
     if (!size || !ptCtx.topViewInstance || !ptCtx.sideViewInstance) {
@@ -311,6 +321,8 @@ const PointCloudTopView: React.FC<IProps> = ({
         zoom,
         intelligentFit,
       });
+
+      setIsCreate(true);
     });
 
     TopView2dOperation.singleOn('deletedObject', ({ id }: { id: any }) => {
