@@ -7,10 +7,7 @@ import { connect } from 'react-redux';
 import { cKeyCode, EventBus } from '@labelbee/lb-annotation';
 import { LabelBeeContext } from '@/store/ctx';
 import { a2MapStateToProps, IA2MapStateProps } from '@/store/annotation/map';
-import {
-  ICalib,
-  IPolygonPoint,
-} from '@labelbee/lb-utils';
+import { ICalib, IPolygonPoint } from '@labelbee/lb-utils';
 import PointCloud2DSingleView from './PointCloud2DSingleView';
 import TitleButton from './components/TitleButton';
 import { LeftOutlined } from '@ant-design/icons';
@@ -125,17 +122,19 @@ const PointCloud2DView = ({
     imageSizes,
     selectedIDs,
     windowKeydownListenerHook,
+    setIsLargeStatus,
   } = useContext(PointCloudContext);
   const [selectedID, setSelectedID] = useState<number | string>('');
   const [isEnlarge, setIsEnlarge_] = useState<boolean>(false);
   const [curIndex, setCurIndex] = useState<number | undefined>(undefined);
 
   const setIsEnlarge = useCallback((isEnlarge: boolean) => {
-    setIsEnlarge_(isEnlarge)
-    EventBus.emit('2d-image:enlarge', isEnlarge)
-  }, [])
+    setIsLargeStatus(isEnlarge);
+    setIsEnlarge_(isEnlarge);
+    EventBus.emit('2d-image:enlarge', isEnlarge);
+  }, []);
 
-  const worker = useRef<Worker>()
+  const worker = useRef<Worker>();
 
   useEffect(() => {
     if (
@@ -145,7 +144,7 @@ const PointCloud2DView = ({
       currentData?.mappingImgList?.length > 0
     ) {
       if (worker.current) {
-        worker.current.terminate()
+        worker.current.terminate();
       }
       worker.current = new PointCloud2DViewWorker() as Worker;
       worker.current.onmessage = (e: any) => {
@@ -178,7 +177,6 @@ const PointCloud2DView = ({
     selectedIDs,
   ]);
 
-
   /** Keydown events only for `isEnlarge: true` scene  */
   const onKeyDown = useLatest((event: KeyboardEvent) => {
     if (!isEnlarge) {
@@ -188,7 +186,7 @@ const PointCloud2DView = ({
     // Abort the sibling and the ancestor events propagation
     const abortSiblingAndAncestorPropagation = () => {
       event.stopImmediatePropagation();
-    }
+    };
 
     switch (event.keyCode) {
       case EKeyCode.Esc: {

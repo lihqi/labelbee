@@ -1662,9 +1662,13 @@ $headerHeight: 40px;
       display: none;
     }
   }
-
-  .#{$ptPrefix}-container__left {
+  .#{$ptPrefix}-container__left-large{
+    width: 455px;
+  }
+  .#{$ptPrefix}-container__left-noLarge{
     width: 100%;
+  }
+  .#{$ptPrefix}-container__left-large,.#{$ptPrefix}-container__left-noLarge {
     display: flex;
     flex-direction: column;
     border-right: 1px solid #fff;
@@ -1938,9 +1942,13 @@ $headerHeight: 40px;
         border-bottom: 1px solid #fff;
       }
     }
-
-    .#{$ptPrefix}-container__right-bottom {
+    .#{$ptPrefix}-container__right-bottom-large{
+      flex: 1;
+    }
+    .#{$ptPrefix}-container__right-bottom-noLarge{
       height: 100%;
+    }
+    .#{$ptPrefix}-container__right-bottom-large,.#{$ptPrefix}-container__right-bottom-noLarge {
       display: flex;
       overflow: auto;
 
