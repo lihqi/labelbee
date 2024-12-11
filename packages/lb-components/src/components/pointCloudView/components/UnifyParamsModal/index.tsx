@@ -1,11 +1,10 @@
-import { ESubmitType } from '@/constant';
-import { BatchUpdateResultByTrackID, ToSubmitFileData } from '@/store/annotation/actionCreators';
+import { BatchUpdateResultByTrackID } from '@/store/annotation/actionCreators';
 import { LabelBeeContext, useDispatch } from '@/store/ctx';
-import { Form, InputNumber, message, Modal, Popover, Select } from 'antd';
+import { Form, InputNumber, message, Modal, Popover, Radio, Select } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { IPointCloudConfig, PointCloudUtils } from '@labelbee/lb-utils';
+import { IPointCloudBox, IPointCloudConfig, PointCloudUtils } from '@labelbee/lb-utils';
 import { connect } from 'react-redux';
 import { AppState } from '@/store';
 import { AnnotationFileList } from '@/types/data';
@@ -48,6 +47,65 @@ const PrefixTag: React.FC<{ text: string }> = ({ text }) => {
     </span>
   );
 };
+
+interface ISizeShowProps {
+  size?: {
+    width: number;
+    height: number;
+    depth: number;
+  };
+  isMax: boolean;
+  selectedBox?: IPointCloudBox;
+}
+
+const SizeShow = (props: ISizeShowProps) => {
+  const { t } = useTranslation();
+
+  const { size, isMax, selectedBox } = props;
+
+  if (!size || !selectedBox) {
+    return null;
+  }
+  const style = { marginRight: 16 };
+
+  const params = {
+    ...selectedBox,
+    ...(isMax && size),
+  };
+
+  const { length, width, height } = PointCloudUtils.transferBox2Kitti(params);
+
+  return (
+    <div>
+      <span style={style}>
+        {t('Length')}: {length.toFixed(DECIMAL_PLACES)}
+      </span>
+      <span style={style}>
+        {t('Width')}: {width.toFixed(DECIMAL_PLACES)}
+      </span>
+      <span style={style}>
+        {t('Height')}: {height.toFixed(DECIMAL_PLACES)}
+      </span>
+      <Popover
+        placement='rightBottom'
+        content={`统一尺寸为该ID的所有标注框${isMax ? '中最大的尺寸' : '以当前帧框尺寸为标准'}`}
+      >
+        <QuestionCircleOutlined />
+      </Popover>
+    </div>
+  );
+};
+
+const sizeOptions = [
+  {
+    value: 'current',
+    label: '当前帧尺寸',
+  },
+  {
+    value: 'max',
+    label: '最大尺寸',
+  },
+];
 
 const UnifyParamsModal = ({ id, visible, onCancel, config, imgList, imgIndex }: IProps) => {
   const dispatch = useDispatch();
@@ -101,9 +159,18 @@ const UnifyParamsModal = ({ id, visible, onCancel, config, imgList, imgIndex }: 
       }
     }
 
-    if (size) {
-      Object.assign(newData, size);
-    }
+    const { UnifySize } = values;
+
+    Object.assign(
+      newData,
+      size && UnifySize === 'max'
+        ? size
+        : {
+            width: selectedBox?.info?.width,
+            height: selectedBox?.info?.height,
+            depth: selectedBox?.info?.depth,
+          },
+    );
 
     dispatch(
       BatchUpdateResultByTrackID(id, newData, [values.prevPage - 1, values.nextPage - 1], imgList),
@@ -139,34 +206,6 @@ const UnifyParamsModal = ({ id, visible, onCancel, config, imgList, imgIndex }: 
 
   const onOk = () => form.submit();
 
-  const sizeShow = () => {
-    if (!size || !selectedBox?.info) {
-      return;
-    }
-    const style = { marginRight: 16 };
-
-    const { length, width, height } = PointCloudUtils.transferBox2Kitti({
-      ...selectedBox?.info, // Just for the type check
-      ...size,
-    });
-
-    return (
-      <div>
-        <span style={style}>
-          {t('Length')}: {length.toFixed(DECIMAL_PLACES)}
-        </span>
-        <span style={style}>
-          {t('Width')}: {width.toFixed(DECIMAL_PLACES)}
-        </span>
-        <span style={style}>
-          {t('Height')}: {height.toFixed(DECIMAL_PLACES)}
-        </span>
-        <Popover placement='rightBottom' content='统一尺寸为该ID的所有标注框中最大的尺寸'>
-          <QuestionCircleOutlined />
-        </Popover>
-      </div>
-    );
-  };
   const selectStyle = {
     width: '200px',
   };
@@ -242,8 +281,27 @@ const UnifyParamsModal = ({ id, visible, onCancel, config, imgList, imgIndex }: 
             </span>
           </Form.Item>
 
-          <Form.Item name='UnifySize' label={t('UnifySize')}>
-            {sizeShow()}
+          <Form.Item
+            name='UnifySize'
+            label={t('UnifySize')}
+            required={true}
+            initialValue={'current'}
+          >
+            <Radio.Group
+              onChange={(e) => {
+                form.setFieldValue('UnifySize', e.target.value);
+              }}
+            >
+              {sizeOptions.map((item) => {
+                const { value, label } = item;
+                return (
+                  <Radio value={value} key={value}>
+                    <div>{label}</div>
+                    <SizeShow selectedBox={selectedBox?.info} size={size} isMax={value === 'max'} />
+                  </Radio>
+                );
+              })}
+            </Radio.Group>
           </Form.Item>
 
           <Form.Item label={t('UnifyTag')} required={true}>
