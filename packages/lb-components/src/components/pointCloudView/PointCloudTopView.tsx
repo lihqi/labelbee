@@ -208,7 +208,7 @@ const PointCloudTopView: React.FC<IProps> = ({
   const size = useSize(ref);
   const config = jsonParser(stepInfo.config);
   const { setZoom, syncTopviewToolZoom } = useZoom();
-  const { hideAttributes } = ptCtx;
+  const { hideAttributes, setIsLargeStatus, clearAllDetectionInstance } = ptCtx;
 
   const { addPolygon, deletePolygon } = usePolygon();
   const { deletePointCloudSphere } = useSphere();
@@ -218,7 +218,7 @@ const PointCloudTopView: React.FC<IProps> = ({
   const pointCloudViews = usePointCloudViews();
   const { pushHistoryWithList } = useHistory();
   const [needUpdateCenter, setNeedUpdateCenter] = useState(true);
-  
+
   useLayoutEffect(() => {
     if (ptCtx.topViewInstance) {
       return;
@@ -431,20 +431,22 @@ const PointCloudTopView: React.FC<IProps> = ({
 
   useEffect(() => {
     // Center the view by selectedID
-    const {topViewInstance, selectedID, selectedPointCloudBox, zoom} = ptCtx
+    const { topViewInstance, selectedID, selectedPointCloudBox, zoom } = ptCtx;
     if (!topViewInstance || !selectedID || !selectedPointCloudBox || !needUpdateCenter) {
       setNeedUpdateCenter(true);
       return;
     }
     const { center } = selectedPointCloudBox;
-    const { pointCloudInstance: pointCloud, toolInstance } = topViewInstance
-    const basicResult = toolInstance.polygonList.find((el: { id: string; }) => el.id === ptCtx.selectedID);
+    const { pointCloudInstance: pointCloud, toolInstance } = topViewInstance;
+    const basicResult = toolInstance.polygonList.find(
+      (el: { id: string }) => el.id === ptCtx.selectedID,
+    );
     if (!basicResult) {
       setNeedUpdateCenter(true);
       return;
-    };
+    }
     const centerPoint = MathUtils.getRectCenterPoint(basicResult.pointList);
-    const currentPos = MathUtils.getCurrentPosFromRectCenter(toolInstance.size, centerPoint, zoom)
+    const currentPos = MathUtils.getCurrentPosFromRectCenter(toolInstance.size, centerPoint, zoom);
     toolInstance.setCurrentPos(currentPos);
     toolInstance.render();
     const { x, y, z } = pointCloud.initCameraPosition;
@@ -496,6 +498,7 @@ const PointCloudTopView: React.FC<IProps> = ({
           <TitleButton
             title={t('TopView')}
             onClick={() => {
+              setIsLargeStatus(true);
               setIsEnlargeTopView(true);
             }}
           />

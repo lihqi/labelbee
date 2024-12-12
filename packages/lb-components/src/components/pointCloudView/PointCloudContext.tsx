@@ -176,6 +176,9 @@ export interface IPointCloudContext
 
   updateRectListByReducer: UpdateRectListByReducer;
   windowKeydownListenerHook: WindowKeydownListenerHooker;
+
+  isLargeStatus: boolean;
+  setIsLargeStatus: (isLargeStatus: boolean) => void;
 }
 
 const pickRectObject = (rect: IPointCloud2DRectOperationViewRect) => {
@@ -269,6 +272,9 @@ export const PointCloudContext = React.createContext<IPointCloudContext>({
 
   updateRectListByReducer: () => {},
   windowKeydownListenerHook: getEmptyUseWindowKeydownListener(),
+
+  isLargeStatus: false,
+  setIsLargeStatus: () => {},
 });
 
 export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
@@ -299,6 +305,7 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
   const [segmentation, setSegmentation] = useState<IPointCloudSegmentation[]>([]);
   const [highlight2DDataList, setHighlight2DDataList] = useState<IHighlight2DData[]>([]);
   const [highlight2DLoading, setHighlight2DLoading] = useState<boolean>(false);
+  const [isLargeStatus, setIsLargeStatus] = useState<boolean>(false);
   const state = useAnnotatedBoxStore();
 
   const [imageSizes, setImageSizes] = useState<{
@@ -822,6 +829,9 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
 
       updateRectListByReducer,
       windowKeydownListenerHook,
+
+      isLargeStatus,
+      setIsLargeStatus,
     };
   }, [
     valid,
@@ -857,6 +867,8 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
 
     updateRectListByReducer,
     windowKeydownListenerHook,
+    isLargeStatus,
+    setIsLargeStatus,
   ]);
 
   useEffect(() => {

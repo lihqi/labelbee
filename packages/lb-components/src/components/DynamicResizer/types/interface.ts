@@ -13,6 +13,7 @@ interface Common {
   minRightWidth?: number | string; // Users can set the minimum width of the right section
   localKey?: string;
   enableEdges?: EdgeDirection[]; // Users can set the default dragging direction to the right and the common dragging direction to the bottom
+  disabled?: boolean;
   onResizeStart?: () => void;
   onResize?: () => void;
   onResizeStop?: () => void;

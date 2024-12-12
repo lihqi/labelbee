@@ -63,7 +63,7 @@ const PointCloudView: React.FC<IProps> = (props) => {
     stepInfo,
   } = props;
   const ptCtx = useContext(PointCloudContext);
-  const { globalPattern, setGlobalPattern, selectedIDs } = ptCtx;
+  const { globalPattern, setGlobalPattern, selectedIDs, isLargeStatus, setIsLargeStatus } = ptCtx;
   const dispatch = useDispatch();
   const rightRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -201,8 +201,14 @@ const PointCloudView: React.FC<IProps> = (props) => {
               defaultWidth={360}
               minLeftWidth={244}
               minRightWidth={'50%'}
+              disabled={isLargeStatus}
             >
-              <div className={getClassName('point-cloud-container', 'left')}>
+              <div
+                className={getClassName(
+                  'point-cloud-container',
+                  isLargeStatus ? 'left-large' : 'left-noLarge',
+                )}
+              >
                 <PointCloud3DView setResourceLoading={setResourceLoading} />
                 {backAndSideView}
               </div>
@@ -228,6 +234,7 @@ const PointCloudView: React.FC<IProps> = (props) => {
                   defaultHeight={300}
                   minTopHeight={minTopHeight}
                   minBottomHeight={160}
+                  disabled={isLargeStatus}
                 >
                   <PointCloudTopView
                     drawLayerSlot={drawLayerSlot}
@@ -235,13 +242,17 @@ const PointCloudView: React.FC<IProps> = (props) => {
                     intelligentFit={intelligentFit}
                     setIsEnlargeTopView={setIsEnlargeTopView}
                     onExitZoom={() => {
+                      setIsLargeStatus(false);
                       setIsEnlargeTopView(false);
                     }}
                     isEnlargeTopView={isEnlargeTopView}
                   />
                   <div
                     className={classNames({
-                      [getClassName('point-cloud-container', 'right-bottom')]: !isEnlargeTopView,
+                      [getClassName(
+                        'point-cloud-container',
+                        isLargeStatus ? 'right-bottom-large' : 'right-bottom-noLarge',
+                      )]: !isEnlargeTopView,
                       [getClassName('point-cloud-container', 'right-bottom-floatLeft')]:
                         isEnlargeTopView,
                     })}

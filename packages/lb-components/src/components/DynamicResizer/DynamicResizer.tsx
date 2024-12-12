@@ -15,6 +15,7 @@ const DynamicResizer: React.FC<DynamicResizerProps> = ({
   minRightWidth,
   localKey,
   enableEdges = ['right', 'bottom'],
+  disabled = false,
   onResizeStart,
   onResize,
   onResizeStop,
@@ -36,13 +37,20 @@ const DynamicResizer: React.FC<DynamicResizerProps> = ({
     onResizeStop,
   });
 
+  // Shared style for elements
+  const sharedStyle = disabled ? { display: 'contents' } : undefined;
+
   return (
-    <div className={`dynamic-resizer-content ${direction}`} ref={containerRef}>
-      <Resizable {...dynamicResizerProps}>
-        <div className='resizable-child'>{children[0]}</div>
+    <div style={sharedStyle} className={`dynamic-resizer-content ${direction}`} ref={containerRef}>
+      <Resizable style={sharedStyle} {...dynamicResizerProps}>
+        <div style={sharedStyle} className='resizable-child'>
+          {children[0]}
+        </div>
       </Resizable>
 
-      <div className='resizable-child-two'>{children[1]}</div>
+      <div style={sharedStyle} className='resizable-child-two'>
+        {children[1]}
+      </div>
     </div>
   );
 };

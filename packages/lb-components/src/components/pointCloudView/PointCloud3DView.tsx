@@ -129,6 +129,7 @@ const PointCloud3D: React.FC<IA2MapStateProps> = ({
   setResourceLoading,
 }) => {
   const ptCtx = useContext(PointCloudContext);
+  const { setIsLargeStatus } = ptCtx;
   const [showDirection, setShowDirection] = useState(true);
   const [isEnlarge, setIsEnlarge] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -348,6 +349,7 @@ const PointCloud3D: React.FC<IA2MapStateProps> = ({
             <LeftOutlined
               style={{ cursor: 'pointer', marginRight: '12px' }}
               onClick={() => {
+                setIsLargeStatus(false);
                 setIsEnlarge(false);
               }}
             />
@@ -357,6 +359,7 @@ const PointCloud3D: React.FC<IA2MapStateProps> = ({
           <TitleButton
             title={t('3DView')}
             onClick={() => {
+              setIsLargeStatus(true);
               setIsEnlarge(true);
             }}
           />
