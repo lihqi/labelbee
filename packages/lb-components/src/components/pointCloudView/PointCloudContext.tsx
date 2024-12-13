@@ -541,7 +541,7 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
 
     const setSelectedIDs = (selectedIDs?: string[] | string) => {
       let newSelectedIDs: string[] = [];
-
+      // Merge if conditions to reduce redundant judgments and optimize universal judgment logic
       if (selectedIDs === undefined || selectedIDs === '') {
         newSelectedIDs = [];
       } else if (typeof selectedIDs === 'string') {

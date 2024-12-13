@@ -229,6 +229,7 @@ export const calcResetAreasAndBoxIds = (
           if (modifiedBox) {
             // Modifying attributes and depth only requires the boxId
             modifiedBoxIds.push(modifiedBox.box.id);
+            // The increase in ChangeDepth is to fix the issue of color not updating when the height of the rectangular box changes
             if (
               modifiedBox.modifiedType === EPointCloudBoxSingleModifiedType.ChangeSize ||
               modifiedBox.modifiedType === EPointCloudBoxSingleModifiedType.Move ||

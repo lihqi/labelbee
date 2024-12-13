@@ -30,6 +30,7 @@ export default class PolygonUtils {
     polygonPoints.forEach((p) => {
       if (p.pointList) {
         axisList.forEach((v) => {
+          // Optimize the order of judgment and reduce unnecessary traversal times
           if (this.isInPolygon(v, p.pointList, lineType)) {
             const size = this.calcPolygonSize(p.pointList);
             if (size < minSize) {

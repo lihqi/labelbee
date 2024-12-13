@@ -218,6 +218,10 @@ const PointCloudTopView: React.FC<IProps> = ({
   const pointCloudViews = usePointCloudViews();
   const { pushHistoryWithList } = useHistory();
   const [needUpdateCenter, setNeedUpdateCenter] = useState(true);
+  /**
+   * IsCreate aims to address the issue of not being able to retrieve the latest 'context' values in the polygonCreated event,
+   * as it is a registered listener during instance creation and can only obtain the copied 'context' values at that time
+   */
   const [isCreate, setIsCreate] = useState<boolean>(false);
 
   useLayoutEffect(() => {
@@ -246,9 +250,9 @@ const PointCloudTopView: React.FC<IProps> = ({
 
   useEffect(() => {
     if (isCreate && selectedID) {
-      // 表示被创建的时候，单独更新当前创建完毕的框体即可
+      // When created, simply update the currently created box separately
       ptCtx.syncAllViewPointCloudColor(EPointCloudBoxRenderTrigger.Single, pointCloudBoxList);
-      // 颜色更新完毕后将标志位改成false
+      // After the color update is complete, change the flag to false
       setIsCreate(false);
     }
   }, [isCreate]);

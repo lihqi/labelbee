@@ -86,7 +86,10 @@ class PolygonOperation extends BasicToolOperation {
   private rectToolMode?: ERectToolModeType;
 
   constructor(props: IPolygonOperationProps) {
-    super(props);
+    super({
+      ...props,
+      isOffscreenCanvas: true,
+    });
     this.config = CommonToolUtils.jsonParser(props.config);
     this.drawingPointList = [];
     this.polygonList = [];
@@ -1396,11 +1399,12 @@ class PolygonOperation extends BasicToolOperation {
     return selectedPointList;
   }
 
-  private lastMouseMoveTime = 0; // 记录上次鼠标移动的时间
+  private lastMouseMoveTime = 0; // Record the time of the last mouse movement
 
-  private mouseMoveThrottle = 16; // 节流时间（毫秒）
+  private mouseMoveThrottle = 16; // Throttle time (milliseconds)
 
   private determineTrigger(e: MouseEvent): string {
+    //Return interactive behavior based on the current scenario
     if (this.isDrag) {
       return 'drag';
     }
@@ -1420,16 +1424,16 @@ class PolygonOperation extends BasicToolOperation {
 
     let hoverPointIndex = -1;
     let hoverEdgeIndex = -1;
-    // 高亮逻辑判断完毕后需要判断当前选中的状态更新逻辑
+    // After the highlighted logic judgment is completed, it is necessary to determine the current selected state and update the logic
     const { selectedID } = this;
     if (selectedID) {
       hoverPointIndex = this.getHoverPointIndex(e);
-      // 注意： 点的优先级大于边
+      // Note: The priority of a point is greater than that of an edge
       if (hoverPointIndex > -1) {
         if (this.hoverPointIndex !== hoverPointIndex) {
           trigger = '';
         } else {
-          // 在同一个点上进行移动的时候不需要更新和渲染
+          // When moving on the same point, there is no need to update or render
           trigger = 'noRender';
         }
       } else {
@@ -1437,7 +1441,7 @@ class PolygonOperation extends BasicToolOperation {
         if (this.hoverEdgeIndex !== hoverEdgeIndex) {
           trigger = '';
         } else {
-          // 在同一条边上进行移动的时候不需要更新和渲染
+          // When moving on the same edge, there is no need to update or render
           trigger = 'noRender';
         }
       }
@@ -1452,7 +1456,7 @@ class PolygonOperation extends BasicToolOperation {
     requestAnimationFrame(() => {
       const now = Date.now();
 
-      // 节流：如果上次调用时间未超过设定的时间间隔，则跳过
+      // Throttle: If the last call time does not exceed the set time interval, skip
       if (now - this.lastMouseMoveTime < this.mouseMoveThrottle) {
         return;
       }
@@ -1462,7 +1466,7 @@ class PolygonOperation extends BasicToolOperation {
       }
 
       if (this.drawingPointList.length > 0) {
-        // 编辑中无需 hover操作
+        // No hover operation is required during editing
         this.render();
         return;
       }
@@ -1906,12 +1910,15 @@ class PolygonOperation extends BasicToolOperation {
     if (!this.ctx) {
       return;
     }
+    // Pure mobile scenes without destroying rendered rectangles
     if (trigger !== 'move') {
       super.render();
     }
+    // Do not render other polygons when dragging the canvas or dragging a single rectangle
     if (trigger !== 'drag' && trigger !== 'dragSingle') {
       this.renderPolygon(trigger);
     }
+    // Do not render other polygons when dragging a single rectangle
     if (trigger === 'dragSingle') {
       this.renderSelectedPolygons();
     }
@@ -1920,6 +1927,7 @@ class PolygonOperation extends BasicToolOperation {
 
   public renderCursorLine(lineColor: string) {
     requestAnimationFrame(() => {
+      // Clear Extra Canvas
       this.clearOffscreenCanvas();
       const { x, y } = this.coord;
 

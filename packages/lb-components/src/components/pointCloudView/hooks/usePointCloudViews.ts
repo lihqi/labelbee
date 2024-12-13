@@ -840,8 +840,11 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
       setSelectedIDs([]);
     } else {
       setSelectedIDs(boxParams.id);
-      // 不需要重复通过polygonOperation.selection.setSelectedIDs设置2D视图选中id，会触发很多监听，耗时
-      // 不需要执行syncPointCloudViews这个方法，这个方法会更新全部框体，添加的情况下只需要更新当前框体就行
+      /**
+       * Historical changes
+       * 1、There is no need to repeatedly set the 2D view selection ID through polygonOperation.selection.setSelecteIDs, as it will trigger a lot of monitoring and be time-consuming
+       * 2、There is no need to execute the syncPointCloudViews method, which will update all bounding boxes. In the case of adding, only the current bounding box needs to be updated
+       */
       if (intelligentFit) {
         synchronizeTopView(boxParams, newPolygon, topViewInstance, mainViewInstance);
       }
@@ -952,6 +955,7 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
    * @param newPolygon
    * @param originPolygon
    * @param fromView Back or Side
+   * @param trigger Trigger method, some methods do not require full update of the box body
    */
   const viewUpdateBox = (
     newPolygon: any,
@@ -1069,6 +1073,7 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
   };
 
   const sideViewUpdateBox = (newPolygon: any, originPolygon: any) => {
+    // The side view only needs to update the currently changing bounding box
     viewUpdateBox(
       newPolygon,
       originPolygon,
@@ -1078,6 +1083,7 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
   };
 
   const backViewUpdateBox = (newPolygon: any, originPolygon: any) => {
+    // The back view only needs to update the currently changing bounding box
     viewUpdateBox(
       newPolygon,
       originPolygon,
@@ -1152,6 +1158,7 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
      * If multi targets updated, use updateSelectedBoxes and update highlight by syncAllViewPointCloudColor
      */
     if (updatePointCloudList.length === 1) {
+      // 更新的框体就一个时，更新单个即可
       const { newPolygon: polygon } = updateList[0];
       const newPointCloudBoxList = updateSelectedBoxes(updatePointCloudList);
       syncPointCloudViews(

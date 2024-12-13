@@ -620,9 +620,10 @@ export default class DrawUtils {
       lineHeight,
     } = options;
 
-    if (!ctx) return; // 防止 getContext 失败
+    if (!ctx) return; // Prevent getContext failure
 
     ctx.save();
+    // Merge the number of attribute modifications on canvas to reduce the time required for canvas modification
     Object.assign(ctx, {
       textAlign,
       fillStyle: color ?? 'white',
