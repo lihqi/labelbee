@@ -230,7 +230,11 @@ export class PointCloudAnnotation implements IPointCloudAnnotationOperation {
     this.updatePointList(sphereList);
   }
 
-  public updatePolygonList = (pointCloudDataList: IPointCloudBox[], extraList?: IPolygonData[]) => {
+  public updatePolygonList = (
+    pointCloudDataList: IPointCloudBox[],
+    extraList?: IPolygonData[],
+    isDeleteSelectedID: boolean = true,
+  ) => {
     let polygonList = pointCloudDataList.map((v: IPointCloudBox) => {
       const { polygon2d: pointList } = this.pointCloudInstance.getBoxTopPolygon2DCoordinate(v);
       return {
@@ -256,10 +260,10 @@ export class PointCloudAnnotation implements IPointCloudAnnotationOperation {
       );
     }
 
-    this.toolScheduler.updateDataByToolName(EToolName.PointCloudPolygon, polygonList);
+    this.toolScheduler.updateDataByToolName(EToolName.PointCloudPolygon, polygonList, isDeleteSelectedID);
   };
 
-  public updatePointList = (sphereList: IPointCloudSphere[]) => {
+  public updatePointList = (sphereList: IPointCloudSphere[], isDeleteSelectedID: boolean = true) => {
     const pointList = sphereList?.map((v: IPointCloudSphere) => {
       const { point2d } = this.pointCloudInstance.getSphereTopPoint2DCoordinate(v);
       return {
@@ -271,7 +275,7 @@ export class PointCloudAnnotation implements IPointCloudAnnotationOperation {
         textAttribute: '',
       };
     }) as IPointUnit[];
-    this.toolScheduler.updateDataByToolName(EToolName.Point, pointList);
+    this.toolScheduler.updateDataByToolName(EToolName.Point, pointList, isDeleteSelectedID);
   };
 
   /**

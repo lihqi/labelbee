@@ -74,7 +74,7 @@ class RectOperation extends BasicToolOperation {
   public renderPointCloud2DHighlight(): void {}
 
   constructor(props: IRectOperationProps) {
-    super(props);
+    super({ ...props, isOffscreenCanvas: true });
     this._drawOutSideTarget = props.drawOutSideTarget || false;
     this.rectList = [];
     this.isFlow = true;
@@ -875,8 +875,7 @@ class RectOperation extends BasicToolOperation {
         return;
       }
       this.lastMouseMoveTime = now;
-
-      if (super.onMouseMove(e) || this.forbidMouseOperation || !this.imgInfo) {
+      if (super.onMouseMove(e, false) || this.forbidMouseOperation || !this.imgInfo) {
         return;
       }
 
@@ -893,6 +892,7 @@ class RectOperation extends BasicToolOperation {
 
       if (this.selectedIDs.length > 0 && this.dragInfo) {
         this.onDragMove(coordinate);
+        this.render();
         return;
       }
 
@@ -984,6 +984,13 @@ class RectOperation extends BasicToolOperation {
         };
         this.render();
       }
+      // When dragging the canvas
+      if (this.isDrag && !this.dragInfo) {
+        this.render('drag');
+        return;
+      }
+      // At present, the hover effect of 2D views has little impact and will not be processed temporarily. The default is mouse movement interaction
+      this.render('move');
 
       return undefined;
     });
@@ -1600,6 +1607,14 @@ class RectOperation extends BasicToolOperation {
     });
   }
 
+  // Render the selected rectangle
+  public renderSelectedRects() {
+    this.selectedRects.forEach((rect) => {
+      this.renderDrawingRect(rect);
+      this.renderSelectedRect(rect);
+    });
+  }
+
   public renderSelectedRect(rect?: IRect) {
     if (!this.ctx || !rect) {
       return;
@@ -1864,19 +1879,36 @@ class RectOperation extends BasicToolOperation {
   /**
    * 渲染矩形框体
    */
-  public renderRect() {
-    this.renderStaticRect();
+  public renderRect(trigger?: string) {
+    if (trigger !== 'move') {
+      this.renderStaticRect();
+    }
     this.renderCreatingRect();
   }
 
-  public render() {
+  public render(trigger?: string) {
     if (!this.ctx) {
       return;
     }
 
-    super.render();
-    this.renderRect();
+    if (trigger !== 'move') {
+      super.render();
+    }
+    if (trigger !== 'drag') {
+      this.renderRect(trigger);
+    }
     this.renderCursorLine(this.getLineColor(this.defaultAttribute));
+  }
+
+  // Rendering Crosslines
+  public renderCursorLine(lineColor: string) {
+    // Clear Extra Canvas
+    this.clearOffscreenCanvas();
+    const { x, y } = this.coord;
+
+    DrawUtils.drawLine(this.offscreenCanvas, { x: 0, y }, { x: 10000, y }, { color: lineColor });
+    DrawUtils.drawLine(this.offscreenCanvas, { x, y: 0 }, { x, y: 10000 }, { color: lineColor });
+    DrawUtils.drawCircleWithFill(this.offscreenCanvas, { x, y }, 1, { color: 'white' });
   }
 
   public setDefaultAttribute(defaultAttribute?: string) {

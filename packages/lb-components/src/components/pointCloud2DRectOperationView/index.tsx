@@ -270,8 +270,17 @@ const PointCloud2DRectOperationView = (props: IPointCloud2DRectOperationViewProp
 
   const onRightClick = ({ targetId, id }: { targetId: string; id: string }) => {
     setNeedUpdateCenter(false);
-    setSelectedIDs(targetId);
-    setRightClickRectId(id);
+    requestAnimationFrame(() => {
+      updateSelectedIDs(targetId);
+      setRightClickRectId(id);
+    });
+  };
+
+  const updateSelectedIDs = (newID: string) => {
+    const currentIDs = Array.isArray(selectedIDs) ? selectedIDs : [];
+    if (!currentIDs.includes(newID)) {
+      setSelectedIDs(newID);
+    }
   };
 
   useEffect(() => {
@@ -416,7 +425,7 @@ const PointCloud2DRectOperationView = (props: IPointCloud2DRectOperationViewProp
       // Center the view by selectedID
       if (!selectedID || !needUpdateCenter) {
         setNeedUpdateCenter(true);
-        // during disconnection 
+        // during disconnection
         if (shouldExcludePointCloudBoxListUpdate) {
           operation.current.setHoverRectID('');
           operation.current.render();
@@ -431,7 +440,7 @@ const PointCloud2DRectOperationView = (props: IPointCloud2DRectOperationViewProp
         setNeedUpdateCenter(true);
         return;
       }
-      // during disconnection 
+      // during disconnection
       if (shouldExcludePointCloudBoxListUpdate) {
         operation.current.setHoverRectID(rect.id);
       }

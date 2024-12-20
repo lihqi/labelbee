@@ -251,7 +251,7 @@ class BasicToolOperation extends EventListener {
     this.clearImgDrag = this.clearImgDrag.bind(this);
 
     // 初始化监听事件
-    this.dblClickListener = new DblClickEventListener(this.container, 200);
+    this.dblClickListener = new DblClickEventListener(this.container, 300);
     this.coordUtils = new CoordinateUtils(this);
     this.coordUtils.setBasicImgInfo(this.basicImgInfo);
 
@@ -857,15 +857,36 @@ class BasicToolOperation extends EventListener {
     this.offscreenCtx?.clearRect(0, 0, this.size.width, this.size.height);
   }
 
+  private moveAnimationFrameId: number | null = null;
+
+  private onWheelAnimationFrameId: number | null = null;
+
   /** 事件绑定 */
   public eventBinding() {
     this.dblClickListener.addEvent(() => {}, this.onLeftDblClick, this.onRightDblClick);
     this.container.addEventListener('mousedown', this.onMouseDown);
-    this.container.addEventListener('mousemove', this.onMouseMove);
+    this.container.addEventListener('mousemove', (event) => {
+      if (this.moveAnimationFrameId) return;
+
+      this.moveAnimationFrameId = requestAnimationFrame(() => {
+        this.onMouseMove(event);
+        this.moveAnimationFrameId = null;
+      });
+    });
+
     this.container.addEventListener('mouseup', this.onMouseUp);
     this.container.addEventListener('mouseleave', this.onMouseLeave);
     this.container.addEventListener('click', this.onClick);
-    this.container.addEventListener('wheel', this.onWheel);
+
+    this.container.addEventListener('wheel', (event) => {
+      if (this.onWheelAnimationFrameId) return;
+
+      this.onWheelAnimationFrameId = requestAnimationFrame(() => {
+        this.onWheel(event);
+        this.onWheelAnimationFrameId = null;
+      });
+    });
+
     document.addEventListener('keydown', this.onKeyDown);
     document.addEventListener('keyup', this.onKeyUp);
     window.parent.document.addEventListener('contextmenu', this.onContextmenu, false);
