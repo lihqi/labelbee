@@ -30,10 +30,13 @@ export default class PolygonUtils {
     polygonPoints.forEach((p) => {
       if (p.pointList) {
         axisList.forEach((v) => {
-          const size = this.calcPolygonSize(p.pointList);
-          if (this.isInPolygon(v, p.pointList, lineType) && size < minSize) {
-            hoverPolygonID = p.id;
-            minSize = size;
+          // Optimize the order of judgment and reduce unnecessary traversal times
+          if (this.isInPolygon(v, p.pointList, lineType)) {
+            const size = this.calcPolygonSize(p.pointList);
+            if (size < minSize) {
+              hoverPolygonID = p.id;
+              minSize = size;
+            }
           }
         });
       }

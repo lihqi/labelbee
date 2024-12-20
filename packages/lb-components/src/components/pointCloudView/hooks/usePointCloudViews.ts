@@ -840,14 +840,11 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
       setSelectedIDs([]);
     } else {
       setSelectedIDs(boxParams.id);
-      polygonOperation.selection.setSelectedIDs(newPolygon.id);
-      syncPointCloudViews({
-        omitView: PointCloudView.Top,
-        polygon: newPolygon,
-        boxParams,
-        zoom,
-        newPointCloudBoxList: newPointCloudList,
-      });
+      /**
+       * Historical changes
+       * 1、There is no need to repeatedly set the 2D view selection ID through polygonOperation.selection.setSelecteIDs, as it will trigger a lot of monitoring and be time-consuming
+       * 2、There is no need to execute the syncPointCloudViews method, which will update all bounding boxes. In the case of adding, only the current bounding box needs to be updated
+       */
       if (intelligentFit) {
         synchronizeTopView(boxParams, newPolygon, topViewInstance, mainViewInstance);
       }
@@ -958,8 +955,14 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
    * @param newPolygon
    * @param originPolygon
    * @param fromView Back or Side
+   * @param trigger Trigger method, some methods do not require full update of the box body
    */
-  const viewUpdateBox = (newPolygon: any, originPolygon: any, fromView: string) => {
+  const viewUpdateBox = (
+    newPolygon: any,
+    originPolygon: any,
+    fromView: string,
+    trigger: EPointCloudBoxRenderTrigger = EPointCloudBoxRenderTrigger.Default,
+  ) => {
     if (selectedPointCloudBox) {
       let transfer2PointCloud;
       let newBoxParams: IPointCloudBox;
@@ -1021,12 +1024,15 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
         (item) => item.id === newBoxParams.id,
       ) as IPointCloudBox;
 
-      syncPointCloudViews({
-        omitView: updateCurrentView ? undefined : fromView,
-        polygon: newPolygon,
-        boxParams: newBoxParams,
-        newPointCloudBoxList,
-      });
+      syncPointCloudViews(
+        {
+          omitView: updateCurrentView ? undefined : fromView,
+          polygon: newPolygon,
+          boxParams: newBoxParams,
+          newPointCloudBoxList,
+        },
+        trigger,
+      );
 
       return newPointCloudBoxList;
     }
@@ -1067,11 +1073,23 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
   };
 
   const sideViewUpdateBox = (newPolygon: any, originPolygon: any) => {
-    viewUpdateBox(newPolygon, originPolygon, PointCloudView.Side);
+    // The side view only needs to update the currently changing bounding box
+    viewUpdateBox(
+      newPolygon,
+      originPolygon,
+      PointCloudView.Side,
+      EPointCloudBoxRenderTrigger.Single,
+    );
   };
 
   const backViewUpdateBox = (newPolygon: any, originPolygon: any) => {
-    viewUpdateBox(newPolygon, originPolygon, PointCloudView.Back);
+    // The back view only needs to update the currently changing bounding box
+    viewUpdateBox(
+      newPolygon,
+      originPolygon,
+      PointCloudView.Back,
+      EPointCloudBoxRenderTrigger.Single,
+    );
   };
 
   const topViewUpdatePoint = (updatePoint: IPointUnit, size: ISize) => {
@@ -1140,13 +1158,17 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
      * If multi targets updated, use updateSelectedBoxes and update highlight by syncAllViewPointCloudColor
      */
     if (updatePointCloudList.length === 1) {
+      // 更新的框体就一个时，更新单个即可
       const { newPolygon: polygon } = updateList[0];
       const newPointCloudBoxList = updateSelectedBoxes(updatePointCloudList);
-      syncPointCloudViews({
-        polygon,
-        boxParams: updatePointCloudList[0],
-        newPointCloudBoxList,
-      });
+      syncPointCloudViews(
+        {
+          polygon,
+          boxParams: updatePointCloudList[0],
+          newPointCloudBoxList,
+        },
+        EPointCloudBoxRenderTrigger.Single,
+      );
     } else {
       const newPointCloudBoxList = updateSelectedBoxes(updatePointCloudList);
       if (newPointCloudBoxList) {

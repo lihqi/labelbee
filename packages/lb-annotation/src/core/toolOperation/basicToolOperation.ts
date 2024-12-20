@@ -53,6 +53,8 @@ interface IBasicToolOperationProps {
     ratio: number;
   };
   language?: ELang;
+
+  isOffscreenCanvas?: boolean; // Cross line canvas layer with mouse movement
 }
 
 /**
@@ -182,8 +184,15 @@ class BasicToolOperation extends EventListener {
 
   public zoomInfo = DEFAULT_ZOOM_INFO;
 
+  // Cross line canvas layer with mouse movement
+  public offscreenCanvas!: HTMLCanvasElement;
+
+  // Should the cross line canvas layer be enabled? It is not enabled by default and is currently only enabled in point clouds due to performance optimization
+  private isOffscreenCanvas: boolean = false;
+
   constructor(props: IBasicToolOperationProps) {
     super();
+    this.isOffscreenCanvas = !!props.isOffscreenCanvas;
     this.container = props.container;
     this.config = CommonToolUtils.jsonParser(props.config);
     this.showDefaultCursor = props.showDefaultCursor || false;
@@ -263,6 +272,10 @@ class BasicToolOperation extends EventListener {
 
   get basicCtx() {
     return this.basicCanvas?.getContext('2d');
+  }
+
+  get offscreenCtx() {
+    return this.offscreenCanvas?.getContext('2d');
   }
 
   get rotate() {
@@ -420,16 +433,30 @@ class BasicToolOperation extends EventListener {
     const canvas = document.createElement('canvas');
     this.updateCanvasBasicStyle(canvas, size, 10);
 
+    let offscreenCanvas;
+    if (this.isOffscreenCanvas) {
+      // Create offscreen Canvas only when isOffscreen Canvas is true
+      offscreenCanvas = document.createElement('canvas');
+      this.updateCanvasBasicStyle(offscreenCanvas, size, 20);
+      this.offscreenCanvas = offscreenCanvas;
+    }
+
     // set Attribute
     // this.container.style.position = 'relative';
 
     if (isAppend) {
       if (this.container.hasChildNodes()) {
+        if (this.isOffscreenCanvas && offscreenCanvas) {
+          this.container.insertBefore(offscreenCanvas, this.container.childNodes[0]);
+        }
         this.container.insertBefore(canvas, this.container.childNodes[0]);
         this.container.insertBefore(basicCanvas, this.container.childNodes[0]);
       } else {
         this.container.appendChild(basicCanvas);
         this.container.appendChild(canvas);
+        if (this.isOffscreenCanvas && offscreenCanvas) {
+          this.container.appendChild(offscreenCanvas);
+        }
       }
     }
 
@@ -437,6 +464,7 @@ class BasicToolOperation extends EventListener {
     this.container.style.cursor = this.defaultCursor;
     this.ctx?.scale(pixel, pixel);
     this.basicCtx?.scale(pixel, pixel);
+    this.offscreenCtx?.scale(pixel, pixel);
     if (this.ctx) {
       this.ctx.imageSmoothingEnabled = false;
     }
@@ -450,6 +478,10 @@ class BasicToolOperation extends EventListener {
 
     if (this.basicCanvas && this.container.contains(this.basicCanvas)) {
       this.container.removeChild(this.basicCanvas);
+    }
+
+    if (this.offscreenCanvas && this.container.contains(this.offscreenCanvas)) {
+      this.container.removeChild(this.offscreenCanvas);
     }
 
     // 恢复初始状态
@@ -821,6 +853,10 @@ class BasicToolOperation extends EventListener {
     this.basicCtx?.clearRect(0, 0, this.size.width, this.size.height);
   }
 
+  public clearOffscreenCanvas() {
+    this.offscreenCtx?.clearRect(0, 0, this.size.width, this.size.height);
+  }
+
   /** 事件绑定 */
   public eventBinding() {
     this.dblClickListener.addEvent(() => {}, this.onLeftDblClick, this.onRightDblClick);
@@ -883,7 +919,8 @@ class BasicToolOperation extends EventListener {
     }
   }
 
-  public onMouseMove(e: MouseEvent): boolean | void {
+  public onMouseMove(e: MouseEvent, isRender: boolean = true): boolean | void {
+    // 'isRender' Is there a flag for rendering
     if (!this.canvas || this.isImgError) {
       return true;
     }
@@ -915,8 +952,9 @@ class BasicToolOperation extends EventListener {
         // 拖拽信息触发
         this.emit('dragMove', { currentPos, zoom: this.zoom, imgInfo: this.imgInfo });
       }
-
-      this.render();
+      if (isRender) {
+        this.render();
+      }
     } catch (error) {
       console.error(error);
     }

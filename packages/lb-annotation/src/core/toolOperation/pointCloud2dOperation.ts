@@ -284,10 +284,14 @@ class PointCloud2dOperation extends PolygonOperation {
   };
 
   public renderdrawTrackID(polygon: IPolygonData) {
-    const pointList = AxisUtils.changePointListByZoom(polygon.pointList, this.zoom, this.currentPos);
-    const endPoint = pointList[pointList.length - 1];
-    const trackID = polygon?.trackID;
-    DrawUtils.drawText(this.canvas, endPoint, `${trackID}`, {
+    if (!polygon?.pointList?.length) return; // Protective verification
+
+    // Extract the last point of the point cloud data and transform it
+    const lastPoint = polygon.pointList[polygon.pointList.length - 1];
+    const transformedPoint = AxisUtils.changePointByZoom(lastPoint, this.zoom, this.currentPos);
+
+    const trackID = polygon?.trackID?.toString() || ''; // Ensure that trackID is a string
+    DrawUtils.drawText(this.canvas, transformedPoint, trackID, {
       textAlign: 'center',
       color: 'white',
       ...DEFAULT_TEXT_OFFSET,

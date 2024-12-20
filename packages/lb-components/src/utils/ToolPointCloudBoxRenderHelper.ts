@@ -229,9 +229,11 @@ export const calcResetAreasAndBoxIds = (
           if (modifiedBox) {
             // Modifying attributes and depth only requires the boxId
             modifiedBoxIds.push(modifiedBox.box.id);
+            // The increase in ChangeDepth is to fix the issue of color not updating when the height of the rectangular box changes
             if (
               modifiedBox.modifiedType === EPointCloudBoxSingleModifiedType.ChangeSize ||
-              modifiedBox.modifiedType === EPointCloudBoxSingleModifiedType.Move
+              modifiedBox.modifiedType === EPointCloudBoxSingleModifiedType.Move ||
+              modifiedBox.modifiedType === EPointCloudBoxSingleModifiedType.ChangeDepth
             ) {
               // Use the oldBox box here to calculate intersection
               const oldBox = oldList.find((item) => item.id === modifiedBox.box.id)!;

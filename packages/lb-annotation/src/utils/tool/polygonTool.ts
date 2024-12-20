@@ -127,44 +127,60 @@ export function isInPolygon(
   lineType: ELineTypes = ELineTypes.Line,
 ): boolean {
   let counter = 0;
-  let i;
-  let xinters;
   let p1;
   let p2;
 
-  polygonPoints = [...polygonPoints];
+  // 复制和预处理多边形点
   if (lineType === ELineTypes.Curve) {
     polygonPoints = createSmoothCurvePoints(
-      polygonPoints.reduce<any[]>((acc, cur) => {
-        return [...acc, cur.x, cur.y];
-      }, []),
+      polygonPoints.flatMap((point) => [point.x, point.y]),
       0.5,
       true,
       SEGMENT_NUMBER,
     );
   }
 
-  [p1] = polygonPoints;
-  const pointCount = polygonPoints.length;
+  // 快速边界检查
+  const [minX, maxX, minY, maxY]: [number, number, number, number] = polygonPoints.reduce(
+    ([accMinX, accMaxX, accMinY, accMaxY], { x, y }) => [
+      Math.min(accMinX, x),
+      Math.max(accMaxX, x),
+      Math.min(accMinY, y),
+      Math.max(accMaxY, y),
+    ],
+    [Infinity, -Infinity, Infinity, -Infinity],
+  );
 
-  for (i = 1; i <= pointCount; i++) {
-    p2 = polygonPoints[i % pointCount];
-    if (checkPoint.x > Math.min(p1.x, p2.x) && checkPoint.x <= Math.max(p1.x, p2.x)) {
-      if (checkPoint.y <= Math.max(p1.y, p2.y)) {
-        if (p1.x !== p2.x) {
-          xinters = ((checkPoint.x - p1.x) * (p2.y - p1.y)) / (p2.x - p1.x) + p1.y;
-          if (p1.y === p2.y || checkPoint.y <= xinters) {
-            counter++;
-          }
+  if (checkPoint.x < minX || checkPoint.x > maxX || checkPoint.y < minY || checkPoint.y > maxY) {
+    return false;
+  }
+
+  // 核心射线法判断
+  p1 = polygonPoints[polygonPoints.length - 1];
+  for (let i = 0; i < polygonPoints.length; i++) {
+    p2 = polygonPoints[i];
+
+    // 判断是否跨越Y轴
+    if (checkPoint.y > Math.min(p1.y, p2.y) && checkPoint.y <= Math.max(p1.y, p2.y)) {
+      if (checkPoint.x <= Math.max(p1.x, p2.x)) {
+        // 计算交点
+        const xinters = p1.y !== p2.y ? ((checkPoint.y - p1.y) * (p2.x - p1.x)) / (p2.y - p1.y) + p1.x : p1.x;
+
+        if (checkPoint.x <= xinters) {
+          counter++;
         }
       }
     }
     p1 = p2;
+
+    // 提前退出
+    if (counter % 2 !== 0 && i > polygonPoints.length / 2) {
+      break;
+    }
   }
-  if (counter % 2 === 0) {
-    return false;
-  }
-  return true;
+
+  // 奇偶性判断
+  return counter % 2 !== 0;
 }
 
 /**
