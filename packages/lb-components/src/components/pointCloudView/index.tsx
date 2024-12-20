@@ -40,6 +40,7 @@ import classNames from 'classnames';
 import SideAndBackOverView from './components/sideAndBackOverView';
 import { SetLoadPCDFileLoading } from '@/store/annotation/actionCreators';
 import DynamicResizer from '@/components/DynamicResizer';
+import { IBatchSetValid } from '@/views/MainView/sidebar/GeneralOperation';
 
 interface IProps extends IA2MapStateProps {
   drawLayerSlot?: DrawLayerSlot;
@@ -47,6 +48,7 @@ interface IProps extends IA2MapStateProps {
   intelligentFit?: boolean;
   measureVisible?: boolean;
   setResourceLoading?: (loading: boolean) => void;
+  setBatchSetValid?: (values: IBatchSetValid) => void;
 }
 
 const PointCloudView: React.FC<IProps> = (props) => {
@@ -61,6 +63,7 @@ const PointCloudView: React.FC<IProps> = (props) => {
     measureVisible,
     setResourceLoading,
     stepInfo,
+    setBatchSetValid,
   } = props;
   const ptCtx = useContext(PointCloudContext);
   const { globalPattern, setGlobalPattern, selectedIDs, isLargeStatus, setIsLargeStatus } = ptCtx;
@@ -179,6 +182,7 @@ const PointCloudView: React.FC<IProps> = (props) => {
         checkMode={checkMode}
         toolInstanceRef={toolInstanceRef}
         setResourceLoading={setResourceLoading}
+        isBatchSetValid={!!setBatchSetValid}
       />
       <div className={getClassName('point-cloud-layout')} onContextMenu={(e) => e.preventDefault()}>
         <div className={getClassName('point-cloud-wrapper')}>
@@ -272,6 +276,14 @@ const PointCloudView: React.FC<IProps> = (props) => {
           <AnnotatedAttributesPanelFixedRight />
         </div>
       </div>
+      {ptCtx.visibleBatchSetValid &&
+        setBatchSetValid?.({
+          valid: ptCtx.valid,
+          isModal: true,
+          visibleModal: ptCtx.visibleBatchSetValid,
+          onClose: () => ptCtx.setBatchSetValidModal(false),
+          singleSetQuestionImg: () => ptCtx.setPointCloudValid(!ptCtx.valid),
+        })}
     </>
   );
 };

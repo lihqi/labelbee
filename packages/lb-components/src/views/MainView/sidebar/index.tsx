@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AnnotationText from './AnnotationText';
 import ClearIcon from './ClearIcon';
-import GeneralOperation, { PointCloudOperation } from './GeneralOperation';
+import GeneralOperation, { IBatchSetValid, PointCloudOperation } from './GeneralOperation';
 import ImgAttributeInfo from './ImgAttributeInfo';
 import SwitchAttributeList from './SwitchAttributeList';
 import TagSidebar, { expandIconFuc } from './TagSidebar';
@@ -39,6 +39,7 @@ interface IProps {
   setSiderWidth?: (width: number | undefined) => void;
   propsSiderWidth?: number | undefined;
   checkMode?: boolean;
+  setBatchSetValid?: (values: IBatchSetValid) => void;
 }
 
 export const sidebarCls = `${prefix}-sidebar`;
@@ -48,6 +49,7 @@ const Sidebar: React.FC<IProps> = ({
   setSiderWidth,
   propsSiderWidth,
   checkMode,
+  setBatchSetValid,
 }) => {
   const stepInfo = useSelector((state: AppState) =>
     StepUtils.getCurrentStepInfo(state.annotation.step, state.annotation.stepList),
@@ -138,7 +140,7 @@ const Sidebar: React.FC<IProps> = ({
 
   const pointCloudToolSidebar = <PointCloudToolSidebar enableColorPicker={enableColorPicker} />;
 
-  const pointCloudOperation = <PointCloudOperation />;
+  const pointCloudOperation = <PointCloudOperation setBatchSetValid={setBatchSetValid} />;
 
   if (sider) {
     if (typeof sider === 'function') {

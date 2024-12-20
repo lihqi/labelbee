@@ -6,7 +6,7 @@ import { useSingleBox } from './hooks/useSingleBox';
 import { useSphere } from './hooks/useSphere';
 import React, { useContext, useEffect } from 'react';
 import { cTool, CommonToolUtils, EToolName } from '@labelbee/lb-annotation';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import { connect } from 'react-redux';
 import { a2MapStateToProps, IA2MapStateProps } from '@/store/annotation/map';
 import { ICustomToolInstance } from '@/hooks/annotation';
@@ -30,6 +30,7 @@ interface IProps extends IA2MapStateProps {
   checkMode?: boolean;
   toolInstanceRef: React.MutableRefObject<ICustomToolInstance>;
   setResourceLoading?: (loading: boolean) => void;
+  isBatchSetValid?: boolean;
 }
 
 const PointCloudListener: React.FC<IProps> = ({
@@ -40,6 +41,7 @@ const PointCloudListener: React.FC<IProps> = ({
   imgIndex,
   toolInstanceRef,
   setResourceLoading,
+  isBatchSetValid,
 }) => {
   const ptCtx = useContext(PointCloudContext);
   const {
@@ -146,7 +148,12 @@ const PointCloudListener: React.FC<IProps> = ({
         break;
 
       case 'v':
-        ptCtx.setPointCloudValid(!ptCtx.valid);
+        if (isBatchSetValid) {
+          Modal.destroyAll();
+          ptCtx.setBatchSetValidModal(!ptCtx.visibleBatchSetValid);
+        } else {
+          ptCtx.setPointCloudValid(!ptCtx.valid);
+        }
         break;
 
       case 'tab':

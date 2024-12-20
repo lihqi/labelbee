@@ -29,6 +29,15 @@ const mapStateToProps = (state: AppState) => {
     stepList: state.annotation.stepList,
   };
 };
+export interface IBatchSetValid {
+  isHover?: boolean;
+  valid?: boolean;
+  isModal?: boolean;
+  visibleModal?: boolean;
+  onClose?: () => void;
+  singleSetQuestionImg?: () => void;
+}
+
 interface IProps {
   toolInstance: ToolInstance;
   stepInfo: IStepInfo;
@@ -36,6 +45,7 @@ interface IProps {
   imgIndex: number;
   stepList: IStepInfo[];
   hideValidity?: boolean;
+  setBatchSetValid?: (values: IBatchSetValid) => void;
 }
 
 const GeneralOperation: React.FC<IProps> = ({ toolInstance, stepInfo, hideValidity }) => {
@@ -63,7 +73,7 @@ export const PointCloudOperation: ConnectedComponent<
     'toolInstance' | 'stepInfo' | 'imgList' | 'imgIndex' | 'stepList'
   >
 > = connect(mapStateToProps, null, null, { context: LabelBeeContext })(
-  ({ toolInstance, stepInfo, imgList, stepList, imgIndex }) => {
+  ({ toolInstance, stepInfo, imgList, stepList, imgIndex, setBatchSetValid }) => {
     const { t } = useTranslation();
     const { selectedBox } = useSingleBox();
     const operationList = useOperationList(toolInstance);
@@ -114,7 +124,12 @@ export const PointCloudOperation: ConnectedComponent<
 
     return (
       <>
-        <ActionsConfirm allOperation={allOperation} />
+        <ActionsConfirm
+          allOperation={allOperation}
+          setBatchSetValid={setBatchSetValid}
+          valid={toolInstance?.valid}
+        />
+
         <UnifyParamsModal
           id={selectedBoxInfo?.trackID}
           visible={isShowModal}

@@ -29,11 +29,13 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { EPointCloudName } from '@labelbee/lb-annotation';
 import LLMMultiWheelLayout from './LLMMultiWheelLayout';
+import { IBatchSetValid } from './sidebar/GeneralOperation';
 
 interface IProps {
   path: string;
   loading: boolean;
   measureVisible?: boolean;
+  setBatchSetValid?: (values: IBatchSetValid) => void;
 }
 
 const { Sider, Content } = Layout;
@@ -59,6 +61,7 @@ const PointCloudAnnotate: React.FC<AppProps & IProps> = (props) => {
         intelligentFit={props.intelligentFit}
         measureVisible={props.measureVisible}
         setResourceLoading={props.setResourceLoading}
+        setBatchSetValid={props?.setBatchSetValid}
       />
       <ToolFooter style={props.style?.footer} mode={props.mode} footer={props?.footer} />
     </>
@@ -185,6 +188,7 @@ const MainView: React.FC<AppProps & IProps> = (props) => {
             enableColorPicker={props?.enableColorPicker}
             setSiderWidth={setSiderWidth}
             propsSiderWidth={props.style?.sider?.width}
+            setBatchSetValid={props.setBatchSetValid}
           />
         </Sider>
       </Layout>

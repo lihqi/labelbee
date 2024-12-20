@@ -92,10 +92,12 @@ export interface IPointCloudContext
   selectedIDs: string[];
   setSelectedIDs: (ids?: string[] | string) => void;
   valid: boolean;
+  visibleBatchSetValid: boolean;
   setPointCloudResult: (resultList: IPointCloudBoxList) => void;
   setPointCloudSphereList: (sphereList: IPointCloudSphereList) => void;
   selectedPointCloudBox?: IPointCloudBox;
   setPointCloudValid: (valid?: boolean) => void;
+  setBatchSetValidModal: (visible: boolean) => void;
   addSelectedID: (selectedID: string) => void;
   addHighlightID: (highlightID: number) => void;
   selectedAllBoxes: () => void;
@@ -199,10 +201,12 @@ export const PointCloudContext = React.createContext<IPointCloudContext>({
   highlightIDs: [],
   setHighlightIDs: () => {},
   valid: true,
+  visibleBatchSetValid: false,
   setSelectedIDs: () => {},
   setPointCloudResult: () => {},
   setPointCloudSphereList: () => {},
   setPointCloudValid: () => {},
+  setBatchSetValidModal: () => {},
   setTopViewInstance: () => {},
   setSideViewInstance: () => {},
   setBackViewInstance: () => {},
@@ -307,6 +311,7 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
   const [highlight2DLoading, setHighlight2DLoading] = useState<boolean>(false);
   const [isLargeStatus, setIsLargeStatus] = useState<boolean>(false);
   const state = useAnnotatedBoxStore();
+  const [visibleBatchSetValid, setVisibleBatchSetValid] = useState<boolean>(false);
 
   const [imageSizes, setImageSizes] = useState<{
     [key: string]: ISize;
@@ -539,6 +544,10 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
       setValid(valid === false ? false : true);
     };
 
+    const setBatchSetValidModal = (visible: boolean) => {
+      setVisibleBatchSetValid(visible);
+    };
+
     const setSelectedIDs = (selectedIDs?: string[] | string) => {
       let newSelectedIDs: string[] = [];
       // Merge if conditions to reduce redundant judgments and optimize universal judgment logic
@@ -762,8 +771,10 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
       addPointCloudSphere,
       setPointCloudSphereList,
       valid,
+      visibleBatchSetValid,
       selectedPointCloudBox,
       setPointCloudValid,
+      setBatchSetValidModal,
       addSelectedID,
       addHighlightID,
       selectedAllBoxes,
@@ -835,6 +846,7 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
     };
   }, [
     valid,
+    visibleBatchSetValid,
     selectedIDs,
     pointCloudBoxList,
     pointCloudSphereList,

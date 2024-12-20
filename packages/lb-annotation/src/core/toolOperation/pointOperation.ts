@@ -378,6 +378,26 @@ class PointOperation extends BasicToolOperation {
     this.render();
   }
 
+  public setPointValidAndRender(id?: string) {
+    const hasValid = this.pointList.some((point) => point?.valid);
+    this.setPointList(
+      this.pointList.map((point) => {
+        if (point.id === id) {
+          return {
+            ...point,
+            valid: !point.valid,
+          };
+        }
+        if (this.selection.isIdSelected(point.id)) {
+          point.valid = !hasValid;
+        }
+        return point;
+      }),
+      true,
+    );
+    this.render();
+  }
+
   public onDragMove(e: MouseEvent) {
     if (!this.imgInfo) return;
     this.dragStatus = EDragStatus.Move;
@@ -445,6 +465,11 @@ class PointOperation extends BasicToolOperation {
         this.onTabKeyDown(e);
         break;
       }
+      case EKeyCode.F:
+        if (this.selectedIDs.length > 0) {
+          this.setPointValidAndRender(this.selectedID);
+        }
+        break;
       case EKeyCode.Z:
         this.setIsHidden(!this.isHidden);
         this.render();

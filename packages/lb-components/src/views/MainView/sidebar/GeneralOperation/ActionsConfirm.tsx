@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Col, Popconfirm } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { prefix } from '@/constant';
+import { IBatchSetValid } from '../GeneralOperation';
 
 export interface IOperationConfig {
   name: string;
@@ -68,11 +69,39 @@ const ShowIcon = ({ isHover, info }: { isHover: string | null; info: IOperationC
   );
 };
 
-const ActionsConfirm: React.FC<{ allOperation: IOperationConfig[] }> = ({ allOperation }) => {
+const ActionsConfirm: React.FC<{
+  allOperation: IOperationConfig[];
+  setBatchSetValid?: (values: IBatchSetValid) => void;
+  valid?: boolean;
+}> = ({ allOperation, setBatchSetValid, valid }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isHover, setHover] = useState<string | null>(null);
   const { t } = useTranslation();
   const annotationLength = Math.floor(24 / allOperation.length);
+
+  const itemBox = (info: IOperationConfig) => {
+    if (info.forbidConfirm) {
+      return <ShowIcon info={info} isHover={isHover} />;
+    }
+    if (setBatchSetValid && info.key === 'setValidity') {
+      return setBatchSetValid({ valid, isHover: !!isHover, singleSetQuestionImg: info.onClick });
+    }
+    return (
+      <Popconfirm
+        title={<PopconfirmTitle info={info} />}
+        placement='topRight'
+        okText={t('Confirm')}
+        cancelText={t('Cancel')}
+        getPopupContainer={() => ref.current ?? document.body}
+        onConfirm={info.onClick}
+        overlayClassName={`${prefix}-pop-confirm`}
+      >
+        <div>
+          <ShowIcon info={info} isHover={isHover} />
+        </div>
+      </Popconfirm>
+    );
+  };
 
   return (
     <div className='generalOperation' ref={ref}>
@@ -88,23 +117,7 @@ const ActionsConfirm: React.FC<{ allOperation: IOperationConfig[] }> = ({ allOpe
               setHover(null);
             }}
           >
-            {info.forbidConfirm ? (
-              <ShowIcon info={info} isHover={isHover} />
-            ) : (
-              <Popconfirm
-                title={<PopconfirmTitle info={info} />}
-                placement='topRight'
-                okText={t('Confirm')}
-                cancelText={t('Cancel')}
-                getPopupContainer={() => ref.current ?? document.body}
-                onConfirm={info.onClick}
-                overlayClassName={`${prefix}-pop-confirm`}
-              >
-                <div>
-                  <ShowIcon info={info} isHover={isHover} />
-                </div>
-              </Popconfirm>
-            )}
+            {itemBox(info)}
           </div>
         </Col>
       ))}
