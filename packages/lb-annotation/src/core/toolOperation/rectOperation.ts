@@ -1607,14 +1607,6 @@ class RectOperation extends BasicToolOperation {
     });
   }
 
-  // Render the selected rectangle
-  public renderSelectedRects() {
-    this.selectedRects.forEach((rect) => {
-      this.renderDrawingRect(rect);
-      this.renderSelectedRect(rect);
-    });
-  }
-
   public renderSelectedRect(rect?: IRect) {
     if (!this.ctx || !rect) {
       return;
