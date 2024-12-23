@@ -259,8 +259,8 @@ class PolygonOperation extends BasicToolOperation {
     this.render();
   }
 
-  public setResult(polygonList: IPolygonData[]) {
-    this.clearActiveStatus();
+  public setResult(polygonList: IPolygonData[], isDeleteSelectedID: boolean = true) {
+    this.clearActiveStatus(isDeleteSelectedID);
     this.setPolygonList(polygonList);
     this.render();
   }
@@ -350,7 +350,6 @@ class PolygonOperation extends BasicToolOperation {
     }
 
     this.rectToolMode = localStorage.getItem(RECT_TOOL_MODE_NAME) as ERectToolModeType;
-    this.deleteSelectedID();
     const coordinateZoom = this.getCoordinateUnderZoom(e);
     const coordinate = AxisUtils.changeDrawOutsideTarget(
       coordinateZoom,
@@ -440,9 +439,11 @@ class PolygonOperation extends BasicToolOperation {
   /**
    *  清楚所有的中间状态
    */
-  public clearActiveStatus() {
+  public clearActiveStatus(isDeleteSelectedID: boolean = true) {
     this.clearPolygonDrag();
-    this.deleteSelectedID();
+    if (isDeleteSelectedID) {
+      this.deleteSelectedID();
+    }
   }
 
   public clearDrawingStatus() {

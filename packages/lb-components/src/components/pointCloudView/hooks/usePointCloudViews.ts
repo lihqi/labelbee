@@ -834,7 +834,7 @@ export const usePointCloudViews = (params?: IUsePointCloudViewsParams) => {
       config?.secondaryAttributeConfigurable ? config?.inputList ?? [] : [],
     );
 
-    topViewInstance?.updatePolygonList(newPointCloudList ?? [], polygonList);
+    topViewInstance?.updatePolygonList(newPointCloudList ?? [], polygonList, false);
     /** If new box is hidden will not active target point box */
     if (isBoxHidden) {
       setSelectedIDs([]);

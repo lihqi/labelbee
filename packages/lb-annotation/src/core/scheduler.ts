@@ -350,11 +350,11 @@ export class ToolScheduler implements IToolSchedulerOperation {
    * there is no more specific instance like pointCloud2dOperation you can reach,
    * so if you need to update result in specific operation instance, you can try this.
    */
-  public updateDataByToolName(toolName: EToolName, result: any) {
+  public updateDataByToolName(toolName: EToolName, result: any, isDeleteSelectedID: boolean = true) {
     const operationIndex = this.toolOperationNameList.indexOf(toolName);
     if (operationIndex >= 0) {
       const operationInstance = this.toolOperationList[operationIndex];
-      operationInstance.setResult(result);
+      operationInstance.setResult(result, isDeleteSelectedID);
     }
   }
 
