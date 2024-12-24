@@ -204,6 +204,7 @@ const PointCloud3D: React.FC<IA2MapStateProps> = ({
           orthographicParams: PointCloudUtils.getDefaultOrthographicParams(size),
           config,
           hiddenText,
+          view: '3DView',
         });
         pointCloud.setHandlerPipe({ setSelectedIDs: ptCtx.setSelectedIDs, setNeedUpdateCenter });
         ptCtx.setMainViewInstance(pointCloud);

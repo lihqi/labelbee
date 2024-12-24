@@ -29,6 +29,7 @@ interface IPointCloudAnnotationProps {
   checkMode?: boolean;
   toolName: THybridToolName;
   proxyMode?: boolean;
+  view?: string;
 }
 
 const createEmptyImage = (size: { width: number; height: number }) => {
@@ -66,6 +67,7 @@ export class PointCloudAnnotation implements IPointCloudAnnotationOperation {
     checkMode,
     toolName,
     proxyMode,
+    view,
   }: IPointCloudAnnotationProps) {
     const defaultOrthographic = PointCloudUtils.getDefaultOrthographicParams(size);
 
@@ -83,6 +85,7 @@ export class PointCloudAnnotation implements IPointCloudAnnotationOperation {
       noAppend: true,
       isOrthographicCamera: true,
       orthographicParams: defaultOrthographic,
+      view,
     });
 
     if (pcdPath) {

@@ -60,6 +60,7 @@ interface IProps {
   checkMode?: boolean;
 
   hiddenText?: boolean;
+  view?: string;
 }
 
 interface IPipeTypes {
@@ -83,7 +84,7 @@ export interface IPointCloudDelegate extends IEventBus {
 }
 
 const DEFAULT_DISTANCE = 30;
-const highlightWorker = new HighlightWorker({ type: 'module' });
+let highlightWorker = new HighlightWorker({ type: 'module' });
 
 export class PointCloud extends EventListener {
   public renderer: THREE.WebGLRenderer;
@@ -165,6 +166,8 @@ export class PointCloud extends EventListener {
 
   private highlightColor = 0xffff00;
 
+  private view: string;
+
   constructor({
     container,
     noAppend,
@@ -175,6 +178,7 @@ export class PointCloud extends EventListener {
     isSegment,
     checkMode,
     hiddenText = false,
+    view = '',
   }: IProps) {
     super();
     this.container = container;
@@ -183,7 +187,7 @@ export class PointCloud extends EventListener {
     this.config = config;
     this.checkMode = checkMode ?? false;
     this.hiddenText = hiddenText;
-
+    this.view = view;
     // TODO: Need to extracted.
     if (isOrthographicCamera && orthographicParams) {
       this.isOrthographicCamera = true;
@@ -977,6 +981,10 @@ export class PointCloud extends EventListener {
   };
 
   public renderPointCloud(points: THREE.Points, radius?: number) {
+    this.clearPointCloud();
+    if (this.workerLoading) {
+      return;
+    }
     points.name = this.pointCloudObjectName;
 
     /**
@@ -1052,7 +1060,7 @@ export class PointCloud extends EventListener {
    * @param radius Render the range of circle
    */
   public loadPCDFile = async (src: string | undefined = this.currentPCDSrc, radius?: number) => {
-    if (!src) return;
+    if (!src || this.workerLoading) return;
     this.clearPointCloud();
     /**
      * Clear Img Cache.
@@ -1162,20 +1170,16 @@ export class PointCloud extends EventListener {
 
   public async handleWebworker(params: any) {
     return new Promise((resolve, reject) => {
-      if (this.workerLoading) {
-        reject(new Error('highlightWorker called repeatedly, new call discarded'));
-        return;
-      }
-      this.workerLoading = true;
+      highlightWorker.terminate();
+      highlightWorker = new HighlightWorker({ type: 'module' });
       highlightWorker.postMessage(params);
 
       highlightWorker.onmessage = (e: any) => {
         resolve(e.data);
-        this.workerLoading = false;
+        highlightWorker.terminate();
       };
       highlightWorker.onerror = (e: any) => {
         reject(e);
-        this.workerLoading = false;
       };
     });
   }
@@ -1196,6 +1200,10 @@ export class PointCloud extends EventListener {
       resetAreas: [],
     },
   ) {
+    if (this.workerLoading) {
+      return;
+    }
+    this.workerLoading = true;
     const { modifiedBoxIds, resetAreas } = config;
     const oldPointCloud = this.scene.getObjectByName(this.pointCloudObjectName) as THREE.Points;
     if (!oldPointCloud) {
@@ -1223,18 +1231,6 @@ export class PointCloud extends EventListener {
         this.handleWebworker(params)
           .then((res: any) => {
             const { color } = res;
-            let combinedColor = color;
-            if (modifiedBoxIds.length || resetAreas.length) {
-              combinedColor = color.map((item: any, index: number) => {
-                if (item === -1) {
-                  // A magic number is needed here to represent the color used in the last rendering
-                  // involved by packages/lb-annotation/src/core/pointCloud/highlightWorker.js REMAINED_COLOR_FLAG
-                  return oldColor[index];
-                }
-                return item;
-              });
-            }
-            const colorAttribute = new THREE.BufferAttribute(combinedColor, 3);
             /**
              * Need to return;
              *
@@ -1250,9 +1246,18 @@ export class PointCloud extends EventListener {
               reject(new Error('Error Path'));
               return;
             }
-
-            // Save the new highlight color.
-            this.cacheInstance.updateColor(this.highlightPCDSrc, combinedColor);
+            let combinedColor = color;
+            if (modifiedBoxIds.length || resetAreas.length) {
+              combinedColor = color.map((item: any, index: number) => {
+                if (item === -1) {
+                  // A magic number is needed here to represent the color used in the last rendering
+                  // involved by packages/lb-annotation/src/core/pointCloud/highlightWorker.js REMAINED_COLOR_FLAG
+                  return oldColor[index];
+                }
+                return item;
+              });
+            }
+            const colorAttribute = new THREE.BufferAttribute(combinedColor, 3);
 
             // Clear
             this.highlightPCDSrc = undefined;
@@ -1262,9 +1267,11 @@ export class PointCloud extends EventListener {
             oldPointCloud.geometry.setAttribute('dimensions', colorAttribute);
             oldPointCloud.geometry.attributes.dimensions.needsUpdate = true;
             resolve(combinedColor);
+            this.workerLoading = false;
             this.render();
           })
           .catch((e) => {
+            this.workerLoading = false;
             reject(e);
           });
       }
