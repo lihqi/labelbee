@@ -243,6 +243,7 @@ const PointCloudTopView: React.FC<IProps> = ({
         checkMode,
         toolName: ToolUtils.getPointCloudToolList() as THybridToolName,
         proxyMode: checkMode,
+        view: 'topView',
       });
       ptCtx.setTopViewInstance(pointCloudAnnotation);
     }
