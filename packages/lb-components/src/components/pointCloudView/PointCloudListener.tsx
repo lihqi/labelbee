@@ -336,9 +336,6 @@ const PointCloudListener: React.FC<IProps> = ({
       setTimeout(() => {
         ptCtx.setPointCloudValid(valid);
 
-        if (valid === false) {
-          clearAllResult();
-        }
       });
     };
 
