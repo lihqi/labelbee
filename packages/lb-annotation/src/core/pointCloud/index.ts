@@ -1211,71 +1211,74 @@ export class PointCloud extends EventListener {
     }
     this.highlightPCDSrc = this.currentPCDSrc;
 
-    return new Promise<BufferAttribute[] | undefined>((resolve, reject) => {
-      if (window.Worker) {
-        const newPointCloudBoxList = pointCloudBoxList ? [...pointCloudBoxList] : [];
-        const cuboidList = newPointCloudBoxList.map((v) => getCuboidFromPointCloudBox(v));
-        const colorList = this.getAllAttributeColor(cuboidList);
-        const position = oldPointCloud.geometry.attributes.position.array;
-        const oldColor = oldPointCloud.geometry.attributes.dimensions.array;
+    return new Promise<{ color: BufferAttribute[]; currentPCDSrc: string | undefined } | undefined>(
+      (resolve, reject) => {
+        if (window.Worker) {
+          const newPointCloudBoxList = pointCloudBoxList ? [...pointCloudBoxList] : [];
+          const cuboidList = newPointCloudBoxList.map((v) => getCuboidFromPointCloudBox(v));
+          const colorList = this.getAllAttributeColor(cuboidList);
+          const position = oldPointCloud.geometry.attributes.position.array;
+          const oldColor = oldPointCloud.geometry.attributes.dimensions.array;
 
-        const params = {
-          cuboidList,
-          position,
-          color: oldColor,
-          colorList,
-          highlightIndex,
-          modifiedBoxIds,
-          resetAreas,
-        };
-        this.handleWebworker(params)
-          .then((res: any) => {
-            const { color } = res;
-            /**
-             * Need to return;
-             *
-             * 1. Not exist highlightPCDSrc
-             * 2. HighlightPCDSrc is not same with currentPCDSrc.
-             * 3. If the calculate color is not same with origin Points length.
-             */
-            if (
-              !this.highlightPCDSrc ||
-              this.highlightPCDSrc !== this.currentPCDSrc ||
-              oldPointCloud.geometry.attributes.position.array.length !== color.length
-            ) {
-              reject(new Error('Error Path'));
-              return;
-            }
-            let combinedColor = color;
-            if (modifiedBoxIds.length || resetAreas.length) {
-              combinedColor = color.map((item: any, index: number) => {
-                if (item === -1) {
-                  // A magic number is needed here to represent the color used in the last rendering
-                  // involved by packages/lb-annotation/src/core/pointCloud/highlightWorker.js REMAINED_COLOR_FLAG
-                  return oldColor[index];
-                }
-                return item;
-              });
-            }
-            const colorAttribute = new THREE.BufferAttribute(combinedColor, 3);
+          const params = {
+            cuboidList,
+            position,
+            color: oldColor,
+            colorList,
+            highlightIndex,
+            modifiedBoxIds,
+            resetAreas,
+          };
+          this.handleWebworker(params)
+            .then((res: any) => {
+              const { color } = res;
+              /**
+               * Need to return;
+               *
+               * 1. Not exist highlightPCDSrc
+               * 2. HighlightPCDSrc is not same with currentPCDSrc.
+               * 3. If the calculate color is not same with origin Points length.
+               */
+              if (
+                !this.highlightPCDSrc ||
+                this.highlightPCDSrc !== this.currentPCDSrc ||
+                oldPointCloud.geometry.attributes.position.array.length !== color.length
+              ) {
+                reject(new Error('Error Path'));
+                return;
+              }
+              let combinedColor = color;
+              if (modifiedBoxIds.length || resetAreas.length) {
+                combinedColor = color.map((item: any, index: number) => {
+                  if (item === -1) {
+                    // A magic number is needed here to represent the color used in the last rendering
+                    // involved by packages/lb-annotation/src/core/pointCloud/highlightWorker.js REMAINED_COLOR_FLAG
+                    return oldColor[index];
+                  }
+                  return item;
+                });
+              }
+              const colorAttribute = new THREE.BufferAttribute(combinedColor, 3);
 
-            // Clear
-            this.highlightPCDSrc = undefined;
+              // Clear
+              this.highlightPCDSrc = undefined;
 
-            colorAttribute.needsUpdate = true;
+              colorAttribute.needsUpdate = true;
 
-            oldPointCloud.geometry.setAttribute('dimensions', colorAttribute);
-            oldPointCloud.geometry.attributes.dimensions.needsUpdate = true;
-            resolve(combinedColor);
-            this.workerLoading = false;
-            this.render();
-          })
-          .catch((e) => {
-            this.workerLoading = false;
-            reject(e);
-          });
-      }
-    });
+              oldPointCloud.geometry.setAttribute('dimensions', colorAttribute);
+              oldPointCloud.geometry.attributes.dimensions.needsUpdate = true;
+              const result = { color: combinedColor, view: this.view, currentPCDSrc: this.currentPCDSrc };
+              resolve(result);
+              this.workerLoading = false;
+              this.render();
+            })
+            .catch((e) => {
+              this.workerLoading = false;
+              reject(e);
+            });
+        }
+      },
+    );
   }
 
   /**
@@ -1346,7 +1349,10 @@ export class PointCloud extends EventListener {
     this.render();
   }
 
-  public updateColor(color: any[]) {
+  public updateColor(color: any[], src = '') {
+    if (src && src !== this.currentPCDSrc) {
+      return;
+    }
     const oldPointCloud = this.scene.getObjectByName(this.pointCloudObjectName) as THREE.Points;
     if (oldPointCloud) {
       const colorAttribute = new THREE.BufferAttribute(color, 3);

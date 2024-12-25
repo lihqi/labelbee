@@ -52,11 +52,11 @@ const useHighlight = ({ currentData }: Partial<IAnnotationStateProps>) => {
     });
 
     try {
-      const color = await mainViewInstance.highlightOriginPointCloud(
+      const colorInfo = await mainViewInstance.highlightOriginPointCloud(
         pointCloudBoxList,
         highlightIndex,
       );
-
+      const { color } = colorInfo ?? {};
       color && topViewInstance?.pointCloudInstance?.updateColor(color);
     } catch (error) {
       console.error('toggle2dVisible highlightOriginPointCloud error:', error);
