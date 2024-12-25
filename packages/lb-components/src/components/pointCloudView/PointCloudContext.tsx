@@ -730,7 +730,7 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
           points: points.geometry.attributes.position.array,
         });
 
-        const color = await mainViewInstance?.highlightOriginPointCloud(
+        const colorInfo = await mainViewInstance?.highlightOriginPointCloud(
           pointCloudList,
           highlightIndex,
           {
@@ -738,7 +738,8 @@ export const PointCloudProvider: React.FC<PropsWithChildren<{}>> = ({ children }
             resetAreas,
           },
         );
-        color && topViewInstance?.pointCloudInstance?.updateColor(color);
+        const { color, currentPCDSrc } = colorInfo ?? {};
+        color && topViewInstance?.pointCloudInstance?.updateColor(color, currentPCDSrc);
         return color;
       } catch (error) {
         console.error('call highlightOriginPointCloud error', error);
