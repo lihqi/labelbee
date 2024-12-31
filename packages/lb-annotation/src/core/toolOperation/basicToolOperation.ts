@@ -245,7 +245,6 @@ class BasicToolOperation extends EventListener {
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
     this.onWheel = this.onWheel.bind(this);
-    this.optimizeWheel = this.optimizeWheel.bind(this);
     this.onLeftDblClick = this.onLeftDblClick.bind(this);
     this.onRightDblClick = this.onRightDblClick.bind(this);
     this.onClick = this.onClick.bind(this);
@@ -869,7 +868,7 @@ class BasicToolOperation extends EventListener {
     this.container.addEventListener('mouseleave', this.onMouseLeave);
     this.container.addEventListener('click', this.onClick);
 
-    this.container.addEventListener('wheel', this.optimizeWheel);
+    this.container.addEventListener('wheel', this.onWheel);
 
     document.addEventListener('keydown', this.onKeyDown);
     document.addEventListener('keyup', this.onKeyUp);
@@ -881,7 +880,7 @@ class BasicToolOperation extends EventListener {
     this.container.removeEventListener('mousemove', this.optimizeMouseMove);
     this.container.removeEventListener('mouseup', this.onMouseUp);
     this.container.removeEventListener('mouseleave', this.onMouseLeave);
-    this.container.removeEventListener('wheel', this.optimizeWheel);
+    this.container.removeEventListener('wheel', this.onWheel);
     this.container.removeEventListener('click', this.onClick);
     document.removeEventListener('keydown', this.onKeyDown);
     document.removeEventListener('keyup', this.onKeyUp);
@@ -908,23 +907,12 @@ class BasicToolOperation extends EventListener {
 
   private moveAnimationFrameId: number | null = null;
 
-  private onWheelAnimationFrameId: number | null = null;
-
   public optimizeMouseMove(event: MouseEvent): boolean | void {
     if (this.moveAnimationFrameId) return;
 
     this.moveAnimationFrameId = requestAnimationFrame(() => {
       this.onMouseMove(event);
       this.moveAnimationFrameId = null;
-    });
-  }
-
-  public optimizeWheel(event: MouseEvent): boolean | void {
-    if (this.onWheelAnimationFrameId) return;
-
-    this.onWheelAnimationFrameId = requestAnimationFrame(() => {
-      this.onWheel(event);
-      this.onWheelAnimationFrameId = null;
     });
   }
 
