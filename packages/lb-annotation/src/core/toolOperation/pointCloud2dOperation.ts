@@ -144,7 +144,7 @@ class PointCloud2dOperation extends PolygonOperation {
 
     this.emit('setSelectedIDs', this.selection.selectedIDs);
     const hoverAttribute = this.polygonList.find((v) => v.id === this.hoverID)?.attribute;
-    if (hoverAttribute && hoverAttribute !== this.defaultAttribute) {
+    if (this.selection.selectedIDs?.length === 1 && hoverAttribute && hoverAttribute !== this.defaultAttribute) {
       this.emit('syncAttribute', hoverAttribute);
     }
   };
