@@ -1,14 +1,14 @@
 import React from 'react';
 import { Tooltip } from 'antd';
 import defaultSizeSvg from '@/assets/toolStyle/icon_defaultSize.svg';
-import { ILimit, IDefaultSize } from '@labelbee/lb-utils';
+import { ILimit, IDefaultSize, IPointCloudLimit } from '@labelbee/lb-utils';
 import { useTranslation } from 'react-i18next';
 
 const LimitPopover = ({
   limit,
   updateSize,
 }: {
-  limit: ILimit;
+  limit: IPointCloudLimit;
   updateSize?: (size: IDefaultSize) => void;
 }) => {
   const { t } = useTranslation();

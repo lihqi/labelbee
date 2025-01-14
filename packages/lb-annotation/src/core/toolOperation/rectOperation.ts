@@ -1167,6 +1167,27 @@ class RectOperation extends BasicToolOperation {
     }
   }
 
+  public checkSize({
+    width,
+    height,
+    minWidth,
+    minHeight,
+  }: {
+    width: number;
+    height: number;
+    minWidth: number;
+    minHeight: number;
+  }) {
+    if (Math.round(width) < minWidth || Math.round(height) < minHeight) {
+      this.emit('messageInfo', locale.getMessagesByLocale(EMessage.RectErrorSizeNotice, this.lang));
+
+      this.clearDrawingStatus();
+      this.render();
+      return false;
+    }
+    return true;
+  }
+
   /**
    * 将绘制中的框体添加进 rectList 中
    * @returns
@@ -1183,12 +1204,19 @@ class RectOperation extends BasicToolOperation {
     width /= this.zoom;
     height /= this.zoom;
 
-    // 小于最小尺寸设置为无效框
-    if (Math.round(width) < this.config.minWidth || Math.round(height) < this.config.minHeight) {
-      this.emit('messageInfo', locale.getMessagesByLocale(EMessage.RectErrorSizeNotice, this.lang));
+    const { attribute } = this.drawingRect;
 
-      this.clearDrawingStatus();
-      this.render();
+    let limit = { minWidth: this.config.minWidth, minHeight: this.config.minHeight };
+
+    if (attribute && this.config.attributeConfigurable) {
+      const attributeList = this.config?.attributeList ?? [];
+      const attributeLimit = attributeList.find((i: any) => i.value === attribute)?.limit;
+      if (attributeLimit) {
+        limit = attributeLimit;
+      }
+    }
+
+    if (!this.checkSize({ width, height, ...limit })) {
       return;
     }
 
