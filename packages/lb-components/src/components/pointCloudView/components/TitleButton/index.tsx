@@ -13,9 +13,13 @@ const TitleButton = ({ title, onClick, style }: IProps) => {
     return null;
   }
   return (
-    <span className={getClassName('point-cloud-container', 'title-button')} style={style}>
+    <span
+      className={getClassName('point-cloud-container', 'title-button')}
+      style={style}
+      onClick={onClick}
+    >
       {title}
-      {onClick && <ExpandAltOutlined onClick={onClick} style={{ marginLeft: 4 }} />}
+      {onClick && <ExpandAltOutlined style={{ marginLeft: 4 }} />}
     </span>
   );
 };
