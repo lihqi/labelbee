@@ -32,7 +32,13 @@ interface IPositionLimit {
   ZMin?: string;
   ZMax?: string;
 }
-export interface ILimit {
+
+export interface IRectLimit {
+  minWidth: number;
+  minHeight: number;
+}
+
+export interface IPointCloudLimit {
   sizeLimit: {
     sizeRange: ISizeRange;
     defaultSize?: IDefaultSize;
@@ -40,6 +46,7 @@ export interface ILimit {
   };
   positionLimit: IPositionLimit;
 }
+export type ILimit = IPointCloudLimit | IRectLimit;
 export interface IInfoList {
   key: string;
   value: string;

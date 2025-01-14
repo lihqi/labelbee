@@ -17,6 +17,7 @@ declare interface IInputList {
   isMulti?: boolean;
   subSelected?: IInfoList[];
   color?: string; // Custom Color for scribbleTool
+  limit?: ILimit;
 }
 
 /** v3.2.0 仅标点工具 列表标注 */
