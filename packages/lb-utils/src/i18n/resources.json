@@ -381,7 +381,9 @@
     "Dialog": "Dialog",
     "SelectionOfAnnotation": "Selection of annotation",
     "Annotating": "Annotating",
-    "Group": "Group"
+    "Group": "Group",
+    "TheDrawFrameSizeIsSmallerThanTheMinimumDrawSizeInTheStepConfiguration": "The draw frame size is smaller than the minimum draw size in the step configuration",
+    "TheSizeOfTheDrawingBoxIsSmallerThanTheMinimumDrawingSizeInTheMainPropertyConfiguration": "The size of the drawing box is smaller than the minimum drawing size in the main property configuration"
   },
   "cn": {
     "TextInput": "文本输入",
@@ -765,6 +767,8 @@
     "Dialog": "对话",
     "SelectionOfAnnotation": "选中标注",
     "Annotating": "正在标注",
-    "Group": "组"
+    "Group": "组",
+    "TheDrawFrameSizeIsSmallerThanTheMinimumDrawSizeInTheStepConfiguration": "绘制框尺寸小于步骤配置里的最小绘制尺寸",
+    "TheSizeOfTheDrawingBoxIsSmallerThanTheMinimumDrawingSizeInTheMainPropertyConfiguration": "绘制框尺寸小于主属性配置里的最小绘制尺寸"
   }
 }

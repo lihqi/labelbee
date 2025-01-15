@@ -19,6 +19,7 @@ import uuid from '../../utils/uuid';
 import { BasicToolOperation, IBasicToolOperationProps } from './basicToolOperation';
 import TextAttributeClass from './textAttributeClass';
 import Selection, { SetDataList } from './Selection';
+import { i18n } from '@labelbee/lb-utils';
 
 interface IRectOperationProps extends IBasicToolOperationProps {
   drawOutSideTarget?: boolean; // 是否可以在边界外进行标注
@@ -1172,14 +1173,23 @@ class RectOperation extends BasicToolOperation {
     height,
     minWidth,
     minHeight,
+    isAttributeConfig = false,
   }: {
     width: number;
     height: number;
     minWidth: number;
     minHeight: number;
+    isAttributeConfig?: boolean;
   }) {
     if (Math.round(width) < minWidth || Math.round(height) < minHeight) {
-      this.emit('messageInfo', locale.getMessagesByLocale(EMessage.RectErrorSizeNotice, this.lang));
+      this.emit(
+        'messageInfo',
+        i18n.t(
+          isAttributeConfig
+            ? 'TheSizeOfTheDrawingBoxIsSmallerThanTheMinimumDrawingSizeInTheMainPropertyConfiguration'
+            : 'TheDrawFrameSizeIsSmallerThanTheMinimumDrawSizeInTheStepConfiguration',
+        ),
+      );
 
       this.clearDrawingStatus();
       this.render();
@@ -1212,7 +1222,7 @@ class RectOperation extends BasicToolOperation {
       const attributeList = this.config?.attributeList ?? [];
       const attributeLimit = attributeList.find((i: any) => i.value === attribute)?.limit;
       if (attributeLimit) {
-        limit = attributeLimit;
+        limit = { ...attributeLimit, isAttributeConfig: true };
       }
     }
 
