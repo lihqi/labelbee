@@ -381,6 +381,15 @@ const PointCloudTopView: React.FC<IProps> = ({
   ]);
 
   useEffect(() => {
+    if (!ptCtx.topViewInstance) return;
+
+    const defaultAttribute = config?.attributeList?.[0]?.value;
+    if (defaultAttribute) {
+      ptCtx.topViewInstance.toolInstance.setDefaultAttribute(defaultAttribute);
+    }
+  }, [ptCtx.topViewInstance]);
+
+  useEffect(() => {
     if (!size?.width || !ptCtx.topViewInstance) {
       return;
     }
@@ -389,11 +398,6 @@ const PointCloudTopView: React.FC<IProps> = ({
      *
      * 1. Update defaultAttribute by first attribute;
      *  */
-    const defaultAttribute = config?.attributeList?.[0]?.value;
-    if (defaultAttribute) {
-      ptCtx.topViewInstance.toolInstance.setDefaultAttribute(defaultAttribute);
-    }
-
     // 1. Update Size
     ptCtx.topViewInstance.initSize(size);
     ptCtx.topViewInstance.updatePolygonList(ptCtx.displayPointCloudList, ptCtx.polygonList);
