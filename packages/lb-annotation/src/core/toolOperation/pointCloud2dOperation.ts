@@ -8,15 +8,18 @@
 import _, { isNumber } from 'lodash';
 import { IPointCloudConfig, toolStyleConverter, UpdatePolygonByDragList, INVALID_COLOR } from '@labelbee/lb-utils';
 import { EDragTarget, ESortDirection, DEFAULT_TEXT_OFFSET } from '@/constant/annotation';
-import { EPolygonPattern } from '@/constant/tool';
+import { EPolygonPattern, ERectToolModeType, RECT_TOOL_MODE_NAME } from '@/constant/tool';
 import { IPolygonData, IPolygonPoint } from '@/types/tool/polygon';
 import AxisUtils from '@/utils/tool/AxisUtils';
 import CommonToolUtils from '@/utils/tool/CommonToolUtils';
 import DrawUtils from '@/utils/tool/DrawUtils';
 import PolygonUtils from '@/utils/tool/PolygonUtils';
 import { polygonConfig } from '@/constant/defaultConfig';
+import MathUtils from '@/utils/MathUtils';
 import PolygonOperation, { IPolygonOperationProps } from './polygonOperation';
 import { BasicToolOperation } from './basicToolOperation';
+import locale from '../../locales';
+import { EMessage } from '../../locales/constants';
 
 interface IPointCloud2dOperationProps {
   showDirectionLine?: boolean;
@@ -36,6 +39,8 @@ class PointCloud2dOperation extends PolygonOperation {
   private checkMode: boolean;
 
   private highlightAttributeList: string[] = []; //
+
+  private rectToolMode?: ERectToolModeType;
 
   constructor(props: IPolygonOperationProps & IPointCloud2dOperationProps) {
     super(props);
@@ -70,6 +75,18 @@ class PointCloud2dOperation extends PolygonOperation {
 
   get visiblePolygonList() {
     return this.polygonList.filter((i) => !this.hideAttributes.includes(i.attribute));
+  }
+
+  get lastStepByThreePointsMode() {
+    return this.pattern === EPolygonPattern.Rect && this.drawingPointList.length === 2;
+  }
+
+  get lastStepByTwoPointsMode() {
+    return (
+      this.pattern === EPolygonPattern.Rect &&
+      this.rectToolMode === ERectToolModeType.TwoPoints &&
+      this.drawingPointList.length === 1
+    );
   }
 
   public setHiddenAttributes(hideAttributes: string[]) {
@@ -406,6 +423,7 @@ class PointCloud2dOperation extends PolygonOperation {
     if (this.forbidAddNew) {
       return;
     }
+    this.rectToolMode = localStorage.getItem(RECT_TOOL_MODE_NAME) as ERectToolModeType;
     super.addPointInDrawing(e);
   }
 
@@ -511,6 +529,74 @@ class PointCloud2dOperation extends PolygonOperation {
   public setHighlightAttribute(attribute: string) {
     this.highlightAttributeList = [attribute];
     this.render();
+  }
+
+  /**
+   * used in isTwoPointsMode；
+   * Effect：Determine the order of the four points, because the orientation is drawn along the line between the starting point and the first point；
+   * Orientation Logic: to the first point, adjacent to the two sides take one for orientation, such as side 1, Side 2, if side 1 clockwise rotation 90 degrees can get side 2, then take side 1 for orientation；
+   */
+  private createRectByTwoPointsMode(drawingPointList: IPolygonPoint[], coordinate: IPolygonPoint) {
+    const startPoint = drawingPointList[0];
+    const result = [...drawingPointList];
+    const fromLeftTopToRightBottom = coordinate.x > startPoint.x && coordinate.y > startPoint.y;
+    const fromRightBottomToLeftTop = coordinate.x < startPoint.x && coordinate.y < startPoint.y;
+    if (fromLeftTopToRightBottom || fromRightBottomToLeftTop) {
+      result.push({ x: startPoint.x, y: coordinate.y }, coordinate, {
+        x: coordinate.x,
+        y: startPoint.y,
+      });
+    } else {
+      result.push({ x: coordinate.x, y: startPoint.y }, coordinate, {
+        x: startPoint.x,
+        y: coordinate.y,
+      });
+    }
+    return result;
+  }
+
+  protected override addPointInDrawingHook(coordinateWithOrigin: ICoordinate) {
+    if (this.lastStepByThreePointsMode || this.lastStepByTwoPointsMode) {
+      this.drawingPointList = this.getPointListByRectDrawing(coordinateWithOrigin, this.drawingPointList)
+        .value as IPolygonPoint[];
+      if (this.config.drawOutsideTarget === false && this.imgInfo) {
+        const isOutSide = this.isPolygonOutSide(this.drawingPointList);
+        if (isOutSide) {
+          this.emit(
+            'messageInfo',
+            `${locale.getMessagesByLocale(EMessage.ForbiddenCreationOutsideBoundary, this.lang)}`,
+          );
+          this.drawingPointList = [];
+
+          return { continue: false };
+        }
+      }
+
+      this.addDrawingPointToPolygonList(true);
+      return { continue: false };
+    }
+    return { continue: true };
+  }
+
+  protected override renderPolygonHook(polygon: IPolygonPoint[]) {
+    if (this.lastStepByTwoPointsMode) {
+      DrawUtils.drawLine(this.canvas, polygon[0], polygon[1], {
+        color: 'white',
+        thickness: 3,
+        lineDash: [6],
+      });
+    }
+    return { continue: true };
+  }
+
+  protected override getPointListByRectDrawing(coordinate: ICoordinate, drawingPointList: IPolygonPoint[]) {
+    let pointList;
+    if (this.lastStepByThreePointsMode) {
+      pointList = MathUtils.getRectangleByRightAngle(coordinate, drawingPointList);
+    } else if (this.lastStepByTwoPointsMode) {
+      pointList = this.createRectByTwoPointsMode(drawingPointList, coordinate);
+    }
+    return { continue: true, value: pointList };
   }
 }
 
