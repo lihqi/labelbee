@@ -479,10 +479,41 @@ export function pointCloudLidar2image(
    * Avoid double counting
    */
   if (isFisheyeCalib === false) {
-    const { composeMatrix4: newComposeMatrix4 } = transferKitti2Matrix(P, R, T) ?? {};
-    if (!newComposeMatrix4) {
-      return;
+    // Defensive copy of the original matrix (to prevent input contamination)
+    const pMatrix = P.map((row) => [...row]);
+
+    // Dimension validation phase
+    if (pMatrix.length !== 3) {
+      throw new Error(`Invalid P matrix: Expected 3 rows, got ${pMatrix.length}`);
     }
+
+    // Check column consistency (all rows must have the same column count)
+    const columnCounts = new Set(pMatrix.map((row) => row.length));
+    if (columnCounts.size !== 1) {
+      throw new Error('Invalid P matrix: Inconsistent column counts between rows');
+    }
+
+    const cols = pMatrix[0].length;
+    if (cols !== 3 && cols !== 4) {
+      throw new Error(`Invalid P matrix: Expected 3 or 4 columns, got ${cols}`);
+    }
+
+    // Matrix completion logic
+    let normalizedP = pMatrix;
+    if (cols === 3) {
+      normalizedP = pMatrix.map((row) => {
+        // Explicit type conversion to ensure numerical type (handling edge cases like strings)
+        const typedRow = row.map(Number);
+        return [...typedRow, 0]; // Append zero column
+      });
+    }
+
+    // Execute transformation logic
+    const normalizedPTuple = normalizedP as [TMatrix14Tuple, TMatrix14Tuple, TMatrix14Tuple];
+    const { composeMatrix4: newComposeMatrix4 } = transferKitti2Matrix(normalizedPTuple, R, T) ?? {};
+
+    if (!newComposeMatrix4) return;
+
     composeMatrix4 = newComposeMatrix4;
   }
   const transferViewData = allViewData
