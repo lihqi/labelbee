@@ -11,14 +11,7 @@ import {
   TEXT_ATTRIBUTE_OFFSET,
 } from '../../constant/annotation';
 import EKeyCode from '../../constant/keyCode';
-import {
-  edgeAdsorptionScope,
-  ELineTypes,
-  EPolygonPattern,
-  EToolName,
-  ERectToolModeType,
-  RECT_TOOL_MODE_NAME,
-} from '../../constant/tool';
+import { edgeAdsorptionScope, ELineTypes, EPolygonPattern, EToolName } from '../../constant/tool';
 import locale from '../../locales';
 import { EMessage } from '../../locales/constants';
 import { IPolygonConfig, IPolygonData, IPolygonPoint } from '../../types/tool/polygon';
@@ -36,6 +29,11 @@ import TextAttributeClass from './textAttributeClass';
 import Selection, { SetDataList } from './Selection';
 
 const TEXT_MAX_WIDTH = 164;
+
+interface IHookResult<T> {
+  continue: boolean; // 是否继续执行
+  value?: T; // 可选的返回值
+}
 
 export interface IPolygonOperationProps extends IBasicToolOperationProps {}
 
@@ -82,8 +80,6 @@ class PolygonOperation extends BasicToolOperation {
   public forbidAddNewPolygonFuc?: (e: MouseEvent) => boolean;
 
   public selection: Selection;
-
-  private rectToolMode?: ERectToolModeType;
 
   constructor(props: IPolygonOperationProps) {
     super({
@@ -169,18 +165,6 @@ class PolygonOperation extends BasicToolOperation {
 
   public get selectedText() {
     return this.selectedPolygon?.textAttribute;
-  }
-
-  public get isThreePointsMode() {
-    return this.pattern === EPolygonPattern.Rect && this.drawingPointList.length === 2;
-  }
-
-  public get isTwoPointsMode() {
-    return (
-      this.pattern === EPolygonPattern.Rect &&
-      this.rectToolMode === ERectToolModeType.TwoPoints &&
-      this.drawingPointList.length === 1
-    );
   }
 
   // 是否直接执行操作
@@ -349,7 +333,6 @@ class PolygonOperation extends BasicToolOperation {
       return;
     }
 
-    this.rectToolMode = localStorage.getItem(RECT_TOOL_MODE_NAME) as ERectToolModeType;
     const coordinateZoom = this.getCoordinateUnderZoom(e);
     const coordinate = AxisUtils.changeDrawOutsideTarget(
       coordinateZoom,
@@ -382,34 +365,8 @@ class PolygonOperation extends BasicToolOperation {
       1 / this.zoom,
     );
 
-    if (this.isThreePointsMode || this.isTwoPointsMode) {
-      if (this.isThreePointsMode) {
-        const rect = MathUtils.getRectangleByRightAngle(coordinateWithOrigin, this.drawingPointList);
-        this.drawingPointList = rect;
-      } else if (this.isTwoPointsMode) {
-        this.drawingPointList = this.createRectByTwoPointsMode(this.drawingPointList, coordinateWithOrigin);
-      }
-
-      // 边缘判断 - 仅限支持图片下范围下
-      if (this.config.drawOutsideTarget === false && this.imgInfo) {
-        const isOutSide = this.isPolygonOutSide(this.drawingPointList);
-        if (isOutSide) {
-          // 边缘外直接跳出
-          this.emit(
-            'messageInfo',
-            `${locale.getMessagesByLocale(EMessage.ForbiddenCreationOutsideBoundary, this.lang)}`,
-          );
-          this.drawingPointList = [];
-
-          return;
-        }
-      }
-
-      // 创建多边形
-      this.addDrawingPointToPolygonList(true);
-      return;
-    }
-
+    // Handle special cases for two-point or three-point rectangle drawing mode
+    if (!this.addPointInDrawingHook(coordinateWithOrigin).continue) return;
     this.drawingPointList.push(coordinateWithOrigin);
     if (this.drawingPointList.length === 1) {
       this.drawingHistory.initRecord(this.drawingPointList);
@@ -1807,23 +1764,22 @@ class PolygonOperation extends BasicToolOperation {
       let drawingPointList = [...this.drawingPointList];
       let coordinate = AxisUtils.getOriginCoordinateWithOffsetCoordinate(this.coord, this.zoom, this.currentPos);
 
-      if (this.isThreePointsMode) {
-        // 矩形模式特殊绘制
-        drawingPointList = MathUtils.getRectangleByRightAngle(coordinate, drawingPointList);
-      } else if (this.config?.edgeAdsorption && this.isAlt === false) {
-        const { dropFoot } = PolygonUtils.getClosestPoint(
-          coordinate,
-          this.polygonList,
-          this.config?.lineType,
-          edgeAdsorptionScope / this.zoom,
-        );
-        if (dropFoot) {
-          coordinate = dropFoot;
-        }
-        drawingPointList.push(coordinate);
-      } else if (this.isTwoPointsMode) {
-        drawingPointList = this.createRectByTwoPointsMode(drawingPointList, coordinate);
+      // Get drawing point list for two-point and three-point rectangle drawing modes
+      const hookResult = this.getPointListByRectDrawing(coordinate, drawingPointList).value;
+      if (hookResult) {
+        drawingPointList = hookResult as IPolygonPoint[];
       } else {
+        if (this.config?.edgeAdsorption && this.isAlt === false) {
+          const { dropFoot } = PolygonUtils.getClosestPoint(
+            coordinate,
+            this.polygonList,
+            this.config?.lineType,
+            edgeAdsorptionScope / this.zoom,
+          );
+          if (dropFoot) {
+            coordinate = dropFoot;
+          }
+        }
         drawingPointList.push(coordinate);
       }
       const polygon = AxisUtils.changePointListByZoom(drawingPointList, this.zoom, this.currentPos);
@@ -1836,13 +1792,8 @@ class PolygonOperation extends BasicToolOperation {
         isClose: false,
         lineType: this.config.lineType,
       });
-      if (this.isTwoPointsMode) {
-        DrawUtils.drawLine(this.canvas, polygon[0], polygon[1], {
-          color: 'white',
-          thickness: 3,
-          lineDash: [6],
-        });
-      }
+      // Draw in two-point rectangle mode
+      this.renderPolygonHook(polygon);
     }
 
     // 5. 编辑中高亮的点
@@ -1881,30 +1832,6 @@ class PolygonOperation extends BasicToolOperation {
         },
       );
     }
-  }
-
-  /**
-   * used in isTwoPointsMode；
-   * Effect：Determine the order of the four points, because the orientation is drawn along the line between the starting point and the first point；
-   * Orientation Logic: to the first point, adjacent to the two sides take one for orientation, such as side 1, Side 2, if side 1 clockwise rotation 90 degrees can get side 2, then take side 1 for orientation；
-   */
-  private createRectByTwoPointsMode(drawingPointList: IPolygonPoint[], coordinate: IPolygonPoint) {
-    const startPoint = drawingPointList[0];
-    const result = [...drawingPointList];
-    const fromLeftTopToRightBottom = coordinate.x > startPoint.x && coordinate.y > startPoint.y;
-    const fromRightBottomToLeftTop = coordinate.x < startPoint.x && coordinate.y < startPoint.y;
-    if (fromLeftTopToRightBottom || fromRightBottomToLeftTop) {
-      result.push({ x: startPoint.x, y: coordinate.y }, coordinate, {
-        x: coordinate.x,
-        y: startPoint.y,
-      });
-    } else {
-      result.push({ x: coordinate.x, y: startPoint.y }, coordinate, {
-        x: startPoint.x,
-        y: coordinate.y,
-      });
-    }
-    return result;
   }
 
   public render(trigger?: string) {
@@ -2024,6 +1951,18 @@ class PolygonOperation extends BasicToolOperation {
 
   public deleteSelectedID() {
     this.setSelectedID('');
+  }
+
+  protected addPointInDrawingHook(..._args: unknown[]): IHookResult<unknown> {
+    return { continue: true };
+  }
+
+  protected renderPolygonHook(..._args: unknown[]): IHookResult<unknown> {
+    return { continue: true };
+  }
+
+  protected getPointListByRectDrawing(..._args: unknown[]): IHookResult<unknown> {
+    return { continue: true };
   }
 }
 

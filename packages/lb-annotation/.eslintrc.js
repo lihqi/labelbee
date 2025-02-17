@@ -82,6 +82,7 @@ module.exports = {
         ignore: ['^@/'],
       },
     ],
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   },
   settings: {
     'import/resolver': {
